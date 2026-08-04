@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { FoodEntry, UserProfile, NutritionData, View } from '../types';
 import { getDailyInsights, DailyInsight, getWorkoutSuggestions, WorkoutPlan, parseVoiceInput, VoiceLogResult } from '../services/geminiService';
