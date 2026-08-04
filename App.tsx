@@ -44,11 +44,65 @@ const DEFAULT_USER_STATE: UserProfile = {
 export default function App() {
   const [view, setView] = useState<View>('home');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isGuestMode, setIsGuestMode] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState<boolean>(() => {
+    return localStorage.getItem('nutrivision_guest_mode') === 'true';
+  });
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [waterGlasses, setWaterGlasses] = useState(0);
-  const [userProfile, setUserProfile] = useState<UserProfile>(DEFAULT_USER_STATE);
-  const [entries, setEntries] = useState<FoodEntry[]>([]);
+
+  const [waterGlasses, setWaterGlasses] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('nutrivision_water');
+      return saved ? Number(saved) : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    try {
+      const saved = localStorage.getItem('nutrivision_user_profile');
+      return saved ? { ...DEFAULT_USER_STATE, ...JSON.parse(saved) } : DEFAULT_USER_STATE;
+    } catch {
+      return DEFAULT_USER_STATE;
+    }
+  });
+
+  const [entries, setEntries] = useState<FoodEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem('nutrivision_entries');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map((e: any) => ({
+          ...e,
+          timestamp: new Date(e.timestamp)
+        }));
+      }
+    } catch {}
+    return [];
+  });
+
+  // LocalStorage backups for guest mode and refresh safety
+  useEffect(() => {
+    if (!currentUser) {
+      localStorage.setItem('nutrivision_user_profile', JSON.stringify(userProfile));
+    }
+  }, [userProfile, currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      localStorage.setItem('nutrivision_entries', JSON.stringify(entries));
+    }
+  }, [entries, currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      localStorage.setItem('nutrivision_water', waterGlasses.toString());
+    }
+  }, [waterGlasses, currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem('nutrivision_guest_mode', isGuestMode ? 'true' : 'false');
+  }, [isGuestMode]);
 
   // Auth Listener
   useEffect(() => {
