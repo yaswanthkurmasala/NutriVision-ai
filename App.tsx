@@ -81,29 +81,54 @@ export default function App() {
     };
   }, []);
 
-  // Firestore Sync: Profile
+  // Firestore Sync: Profile & Data Migration on Google Login
   useEffect(() => {
     if (!currentUser) return;
 
+    // 1. Migrate any guest food log entries into Firestore so no user data is erased
+    if (entries.length > 0) {
+      entries.forEach(async (entry) => {
+        try {
+          const entryData = {
+            name: entry.name,
+            calories: entry.calories,
+            protein: entry.protein,
+            carbs: entry.carbs,
+            fats: entry.fats,
+            fiber: entry.fiber || 0,
+            portionSize: entry.portionSize || '1 serving',
+            timestamp: Timestamp.fromDate(entry.timestamp instanceof Date ? entry.timestamp : new Date(entry.timestamp))
+          };
+          await addDoc(collection(db, 'users', currentUser.uid, 'entries'), entryData);
+        } catch (e) {
+          console.warn("Guest entry migration warning:", e);
+        }
+      });
+    }
+
+    // 2. Subscribe to Firestore user profile document
     const userDocRef = doc(db, 'users', currentUser.uid);
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setUserProfile({
+        setUserProfile(prev => ({
           ...DEFAULT_USER_STATE,
           ...data,
+          name: data.name || currentUser.displayName || prev.name,
+          avatarUrl: currentUser.photoURL || data.avatarUrl || prev.avatarUrl,
           macros: {
             ...DEFAULT_USER_STATE.macros,
             ...(data.macros || {})
           }
-        } as UserProfile);
+        } as UserProfile));
       } else {
-        // Initialize profile if it doesn't exist
-        setDoc(userDocRef, {
+        // Initialize profile for first-time Google sign in without overwriting
+        const initialProfile = {
           ...DEFAULT_USER_STATE,
           name: currentUser.displayName || DEFAULT_USER_STATE.name,
           avatarUrl: currentUser.photoURL || DEFAULT_USER_STATE.avatarUrl
-        }).catch(err => console.warn("Failed to init profile doc:", err));
+        };
+        setDoc(userDocRef, initialProfile, { merge: true }).catch(err => console.warn("Failed to init profile doc:", err));
       }
     }, (err) => {
       console.warn("Firestore profile snapshot warning:", err);
