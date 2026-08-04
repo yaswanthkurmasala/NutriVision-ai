@@ -81,30 +81,39 @@ export default function App() {
     return [];
   });
 
-  // LocalStorage backups for guest mode and refresh safety
+  // LocalStorage backups for refresh safety and instant zero-delay loading
   useEffect(() => {
-    if (!currentUser) {
+    if (isAuthLoading) return;
+    try {
       localStorage.setItem('nutrivision_user_profile', JSON.stringify(userProfile));
+    } catch (e) {
+      console.warn("Profile cache error:", e);
     }
-  }, [userProfile, currentUser]);
+  }, [userProfile, isAuthLoading]);
 
   useEffect(() => {
-    if (!currentUser) {
+    if (isAuthLoading) return;
+    try {
       localStorage.setItem('nutrivision_entries', JSON.stringify(entries));
+    } catch (e) {
+      console.warn("Entries cache error:", e);
     }
-  }, [entries, currentUser]);
+  }, [entries, isAuthLoading]);
 
   useEffect(() => {
-    if (!currentUser) {
+    if (isAuthLoading) return;
+    try {
       localStorage.setItem('nutrivision_water', waterGlasses.toString());
+    } catch (e) {
+      console.warn("Water cache error:", e);
     }
-  }, [waterGlasses, currentUser]);
+  }, [waterGlasses, isAuthLoading]);
 
   useEffect(() => {
     localStorage.setItem('nutrivision_guest_mode', isGuestMode ? 'true' : 'false');
   }, [isGuestMode]);
 
-  // Auth Listener
+  // Auth Listener: Restores session without erasing state on refresh
   useEffect(() => {
     const safetyTimer = setTimeout(() => {
       setIsAuthLoading(false);
@@ -116,12 +125,6 @@ export default function App() {
       setIsAuthLoading(false);
       if (user) {
         setIsGuestMode(false);
-        setView('home');
-      } else {
-        // Reset in-memory state on logout so next user loads their own clean data from Firebase
-        setEntries([]);
-        setWaterGlasses(0);
-        setUserProfile(DEFAULT_USER_STATE);
       }
     }, (err) => {
       console.warn("Auth listener warning:", err);
