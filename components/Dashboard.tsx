@@ -14,6 +14,15 @@ interface DashboardProps {
   onViewChange?: (view: View) => void;
 }
 
+const parseEntryDate = (ts: any): Date => {
+  if (!ts) return new Date();
+  if (ts instanceof Date) return ts;
+  if (typeof ts.toDate === 'function') return ts.toDate();
+  if (typeof ts.seconds === 'number') return new Date(ts.seconds * 1000);
+  const parsed = new Date(ts);
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+};
+
 const Dashboard: React.FC<DashboardProps> = ({ 
   user, 
   entries, 
@@ -23,8 +32,20 @@ const Dashboard: React.FC<DashboardProps> = ({
   onAddManualEntry, 
   onViewChange 
 }) => {
-  const consumed = entries.reduce((acc, entry) => acc + (entry.calories || 0), 0);
-  const calorieGoal = user.dailyCalorieGoal || 2000;
+  const todayStr = useMemo(() => new Date().toLocaleDateString('en-CA'), []);
+
+  const todayEntries = useMemo(() => {
+    return entries.filter(e => {
+      const d = parseEntryDate(e.timestamp);
+      return d.toLocaleDateString('en-CA') === todayStr;
+    });
+  }, [entries, todayStr]);
+
+  const consumed = useMemo(() => {
+    return todayEntries.reduce((acc, entry) => acc + (Number(entry.calories) || 0), 0);
+  }, [todayEntries]);
+
+  const calorieGoal = user.dailyCalorieGoal || 2200;
   const isSurplus = consumed > calorieGoal;
   const isGoalReached = consumed >= calorieGoal * 0.9 && consumed <= calorieGoal;
   
@@ -316,12 +337,12 @@ const Dashboard: React.FC<DashboardProps> = ({
   const metValue = chosenIntensity === 'low' ? 3.5 : chosenIntensity === 'medium' ? 6.0 : 9.5;
   const estimatedCaloriesBurned = Math.round((metValue * 3.5 * userWeight * currentWorkoutMinutes) / 200);
 
-  const totalMacros = useMemo(() => entries.reduce((acc, e) => ({
-    p: acc.p + (e.protein || 0),
-    c: acc.c + (e.carbs || 0),
-    f: acc.f + (e.fats || 0),
-    fi: acc.fi + (e.fiber || 0),
-  }), { p: 0, c: 0, f: 0, fi: 0 }), [entries]);
+  const totalMacros = useMemo(() => todayEntries.reduce((acc, e) => ({
+    p: acc.p + (Number(e.protein) || 0),
+    c: acc.c + (Number(e.carbs) || 0),
+    f: acc.f + (Number(e.fats) || 0),
+    fi: acc.fi + (Number(e.fiber) || 0),
+  }), { p: 0, c: 0, f: 0, fi: 0 }), [todayEntries]);
 
   const mainSize = 160;
   const mainCenter = mainSize / 2;

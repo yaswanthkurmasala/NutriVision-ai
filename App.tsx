@@ -192,19 +192,21 @@ export default function App() {
       timestamp: Timestamp.now()
     };
 
+    const optimisticEntry: FoodEntry = {
+      id: Date.now().toString(),
+      name: data.foodName,
+      calories: data.calories,
+      protein: data.protein,
+      carbs: data.carbs,
+      fats: data.fats,
+      fiber: data.fiber || 0,
+      portionSize: data.portionDescription || '1 serving',
+      timestamp: new Date()
+    };
+
+    setEntries(prev => [optimisticEntry, ...prev.filter(e => e.id !== optimisticEntry.id)]);
+
     if (!currentUser) {
-      const localEntry: FoodEntry = {
-        id: Date.now().toString(),
-        name: data.foodName,
-        calories: data.calories,
-        protein: data.protein,
-        carbs: data.carbs,
-        fats: data.fats,
-        fiber: data.fiber || 0,
-        portionSize: data.portionDescription || '1 serving',
-        timestamp: new Date()
-      };
-      setEntries(prev => [localEntry, ...prev]);
       setView('home');
       return;
     }
