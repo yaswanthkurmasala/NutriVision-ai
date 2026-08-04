@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user health goals and current stats",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "goal": { "type": "string", "enum": ["Bulk", "Cut", "Maintain"] },
+        "dailyCalorieGoal": { "type": "number" },
+        "dailyStepGoal": { "type": "number" },
+        "currentSteps": { "type": "number" },
+        "weight": { "type": "number" },
+        "targetWeight": { "type": "number" },
+        "bmi": { "type": "number" },
+        "bodyFat": { "type": "number" },
+        "avatarUrl": { "type": "string" },
+        "dailyWaterGoal": { "type": "number" },
+        "macros": {
+          "type": "object",
+          "properties": {
+            "protein": { "type": "number" },
+            "carbs": { "type": "number" },
+            "fats": { "type": "number" },
+            "fiber": { "type": "number" }
+          }
+        }
+      },
+      "required": ["name", "goal", "dailyCalorieGoal", "dailyStepGoal", "weight", "macros"]
+    },
+    "FoodEntry": {
+      "title": "Food Entry",
+      "description": "A single food item logged by the user",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "calories": { "type": "number" },
+        "protein": { "type": "number" },
+        "carbs": { "type": "number" },
+        "fats": { "type": "number" },
+        "fiber": { "type": "number" },
+        "portionSize": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "calories", "protein", "carbs", "fats", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile data"
+    },
+    "/users/{userId}/entries/{entryId}": {
+      "schema": "FoodEntry",
+      "description": "User's daily food logs"
+    },
+    "/users/{userId}/water/{date}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "count": { "type": "number" }
+        }
+      },
+      "description": "Daily water intake tracking"
+    }
+  }
+}

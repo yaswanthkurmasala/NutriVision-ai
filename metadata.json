@@ -1,0 +1,10 @@
+{
+  "name": "NutriVision AI",
+  "description": "An AI-powered food nutrition and fitness tracking app with real-time food recognition and personalized analytics.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

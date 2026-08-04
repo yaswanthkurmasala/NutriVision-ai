@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users/{userId}
+    // Fields: name, goal, dailyCalorieGoal, dailyStepGoal, weight, macros, etc.
+    //
+    // Collection: users/{userId}/entries/{entryId}
+    // Fields: name, calories, protein, carbs, fats, fiber, portionSize, timestamp
+    //
+    // Collection: users/{userId}/water/{date}
+    // Fields: count
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Validation Functions
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['name', 'goal', 'dailyCalorieGoal', 'dailyStepGoal', 'weight', 'macros']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.goal in ['Bulk', 'Cut', 'Maintain'] &&
+             data.dailyCalorieGoal is number && data.dailyCalorieGoal > 0 &&
+             data.dailyStepGoal is number && data.dailyStepGoal >= 0 &&
+             data.weight is number && data.weight > 0;
+    }
+
+    function isValidFoodEntry(data) {
+      return data.keys().hasAll(['name', 'calories', 'protein', 'carbs', 'fats', 'timestamp']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.calories is number && data.calories >= 0 &&
+             data.protein is number && data.protein >= 0 &&
+             data.carbs is number && data.carbs >= 0 &&
+             data.fats is number && data.fats >= 0 &&
+             data.timestamp is timestamp;
+    }
+
+    function isValidWaterEntry(data) {
+      return data.keys().hasAll(['count']) &&
+             data.count is number && data.count >= 0;
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      match /entries/{entryId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /water/{date} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}
