@@ -40,7 +40,8 @@ const NotificationToast: React.FC<NotificationToastProps> = ({ reminder, onClose
           <p className="text-xs font-bold text-white/70 leading-tight">
             {reminder.type === 'Meal' ? 'Don\'t forget to log your meal to stay on track.' : 
              reminder.type === 'Water' ? 'Stay hydrated! Have a glass of water now.' : 
-             'Time for a quick walk to reach your step goal.'}
+             reminder.type === 'Steps' ? 'Time for a quick walk to reach your step goal.' : 
+             'Time for your scheduled workout session!'}
           </p>
         </div>
         <button 
