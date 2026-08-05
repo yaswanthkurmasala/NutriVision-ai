@@ -242,18 +242,18 @@ export default function Diary({ entries, onAddManualEntry, onDeleteEntry }: Diar
         {weeklyHistory.map((day) => (
           <div key={day.date} className="space-y-4">
             {/* Day Summary Header */}
-            <div className="flex items-end justify-between px-1 sticky top-0 z-10 py-2.5 bg-background-dark/90 backdrop-blur-xl border-b border-white/10">
+            <div className="flex items-end justify-between px-1 sticky top-0 z-10 py-3 bg-white/95 dark:bg-[#0c1a0e]/95 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 shadow-sm transition-colors">
               <div>
-                <h2 className="text-lg font-black tracking-tight text-white">{day.label}</h2>
+                <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">{day.label}</h2>
               </div>
               <div className="flex space-x-4">
                 <div className="text-right">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total</p>
-                  <p className={`text-sm font-black ${day.totals.cal > 0 ? 'text-primary' : 'text-slate-400'}`}>{Math.round(day.totals.cal || 0)} <span className="text-[8px] font-bold text-slate-400">kcal</span></p>
+                  <p className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mb-1">Total</p>
+                  <p className={`text-sm font-black ${day.totals.cal > 0 ? 'text-emerald-600 dark:text-primary' : 'text-slate-400'}`}>{Math.round(day.totals.cal || 0)} <span className="text-[8px] font-bold text-slate-400">kcal</span></p>
                 </div>
-                <div className="text-right border-l border-white/10 pl-4">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Protein</p>
-                  <p className="text-sm font-black text-slate-300">{Math.round(day.totals.p || 0)}g</p>
+                <div className="text-right border-l border-slate-200 dark:border-white/10 pl-4">
+                  <p className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mb-1">Protein</p>
+                  <p className="text-sm font-black text-slate-700 dark:text-slate-200">{Math.round(day.totals.p || 0)}g</p>
                 </div>
               </div>
             </div>

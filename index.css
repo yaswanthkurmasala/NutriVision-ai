@@ -45,7 +45,7 @@ body {
   100% { top: 100%; opacity: 0; }
 }
 
-/* HIGH-ELEGANCE LIGHT THEME SYSTEM */
+/* HIGH-ELEGANCE LIGHT THEME SYSTEM OVERRIDES */
 html.light-theme {
   --color-primary: #059669;
   --color-background-dark: #f8fafc;
@@ -67,12 +67,26 @@ html.light-theme nav {
   border-top-color: rgba(0, 0, 0, 0.06) !important;
 }
 
+/* Fix sticky headers & dark bar overrides */
+html.light-theme .sticky,
+html.light-theme [class*="sticky"] {
+  background-color: rgba(248, 250, 252, 0.95) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
 html.light-theme .bg-background-dark,
 html.light-theme .bg-\[\#0c1a0e\],
 html.light-theme .bg-\[\#0c130d\],
 html.light-theme .bg-\[\#09120a\],
 html.light-theme .bg-\[\#0d160e\] {
   background-color: #f8fafc !important;
+}
+
+html.light-theme .bg-background-dark\/90,
+html.light-theme .bg-background-dark\/80,
+html.light-theme .bg-background-dark\/95,
+html.light-theme .bg-background-dark\/70 {
+  background-color: rgba(248, 250, 252, 0.95) !important;
 }
 
 html.light-theme .bg-surface-dark,
@@ -85,6 +99,14 @@ html.light-theme .glass-card {
   background: #ffffff !important;
   border-color: rgba(0, 0, 0, 0.07) !important;
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.02) !important;
+}
+
+html.light-theme .bg-black\/40,
+html.light-theme .bg-black\/50,
+html.light-theme .bg-black\/60,
+html.light-theme .bg-black\/70,
+html.light-theme .bg-black\/80 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
 }
 
 html.light-theme .bg-white\/\[0\.02\],

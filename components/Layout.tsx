@@ -35,7 +35,7 @@ const Layout: React.FC<LayoutProps> = ({
   return (
     <div className="min-h-screen bg-background-dark text-slate-100 flex flex-col items-center justify-start font-sans transition-colors duration-300 selection:bg-primary/30">
       {/* Full-width sticky top header with centered content */}
-      <header className="sticky top-0 z-40 w-full bg-background-dark/90 backdrop-blur-xl border-b border-white/5 shadow-sm">
+      <header className="sticky top-0 z-40 w-full bg-white/90 dark:bg-background-dark/90 backdrop-blur-xl border-b border-slate-200 dark:border-white/5 shadow-sm transition-colors">
         <div className="max-w-2xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => onViewChange('home')}>
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/40 flex items-center justify-center text-primary shadow-lg shadow-primary/20 shrink-0 group-hover:scale-105 transition-transform">
@@ -47,7 +47,7 @@ const Layout: React.FC<LayoutProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-sm font-black uppercase tracking-wider text-white group-hover:text-primary transition-colors">NutriVision AI</h1>
+                <h1 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white group-hover:text-primary transition-colors">NutriVision AI</h1>
                 <span className="text-[9px] font-black text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">PRO</span>
               </div>
             </div>
@@ -58,7 +58,7 @@ const Layout: React.FC<LayoutProps> = ({
             <button
               onClick={handleToggleTheme}
               title="Toggle Theme"
-              className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-300 hover:text-primary transition-all cursor-pointer"
+              className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-primary transition-all cursor-pointer"
             >
               <span className="material-icons-round text-lg">
                 {user?.theme === 'light' ? 'dark_mode' : 'light_mode'}
@@ -68,7 +68,7 @@ const Layout: React.FC<LayoutProps> = ({
             {user && (
               <div 
                 onClick={() => onViewChange('profile')}
-                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-1 rounded-xl cursor-pointer transition-all active:scale-95"
+                className="flex items-center gap-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 px-2.5 py-1 rounded-xl cursor-pointer transition-all active:scale-95"
               >
                 <img 
                   src={user.avatarUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex'} 
@@ -90,7 +90,7 @@ const Layout: React.FC<LayoutProps> = ({
       </main>
 
       {/* Full-width fixed bottom navigation bar with centered items */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background-dark/95 backdrop-blur-2xl border-t border-white/5">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-background-dark/95 backdrop-blur-2xl border-t border-slate-200 dark:border-white/5 transition-colors">
         <div className="max-w-2xl mx-auto h-20 grid grid-cols-5 items-center px-2 pb-3">
           {navItems.map((item) => {
             if (item.view === 'camera') {
