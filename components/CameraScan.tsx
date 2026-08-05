@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { analyzeFoodImage, fetchBarcodeNutrition, analyzePackagedProductWithBarcode, PackagedProductData } from '../services/geminiService';
-import { NutritionData, UserProfile } from '../types';
+import { 
+  analyzeFoodImage, 
+  analyzeNutritionLabel,
+  fetchBarcodeNutrition, 
+  analyzePackagedProductWithBarcode, 
+  PackagedProductData 
+} from '../services/geminiService';
+import { NutritionData, UserProfile, FoodItemDetail } from '../types';
 import { triggerHaptic } from '../services/haptic';
 
 interface CameraScanProps {
@@ -20,7 +26,53 @@ const SAMPLE_DISHES = [
       carbs: 32,
       fats: 20,
       fiber: 7,
-      portionDescription: '2 slices sourdough with 1 avocado & 2 eggs'
+      portionDescription: '2 slices sourdough with 1 avocado & 2 eggs • High Precision AI',
+      confidenceScore: 98,
+      dishType: 'Breakfast Power Plate',
+      healthScore: 95,
+      hiddenCalorieWarning: 'Light olive oil drizzle (~20 kcal)',
+      dietaryTags: ['High Fiber', 'Healthy Fats', 'Vegetarian'],
+      items: [
+        {
+          id: 'samp-1',
+          name: 'Poached Organic Eggs (x2)',
+          calories: 140,
+          protein: 12,
+          carbs: 1,
+          fats: 10,
+          fiber: 0,
+          portion: '2 large eggs',
+          confidence: 99,
+          category: 'Protein' as const,
+          boundingBox: { ymin: 15, xmin: 30, ymax: 55, xmax: 70 }
+        },
+        {
+          id: 'samp-2',
+          name: 'Mashed Hass Avocado',
+          calories: 130,
+          protein: 2,
+          carbs: 6,
+          fats: 12,
+          fiber: 5,
+          portion: '1/2 avocado (75g)',
+          confidence: 97,
+          category: 'Fat/Sauce' as const,
+          boundingBox: { ymin: 35, xmin: 20, ymax: 75, xmax: 80 }
+        },
+        {
+          id: 'samp-3',
+          name: 'Artisan Sourdough Toast',
+          calories: 110,
+          protein: 4,
+          carbs: 25,
+          fats: 1,
+          fiber: 2,
+          portion: '2 thick slices',
+          confidence: 96,
+          category: 'Carbs' as const,
+          boundingBox: { ymin: 40, xmin: 10, ymax: 90, xmax: 90 }
+        }
+      ]
     }
   },
   {
@@ -33,20 +85,112 @@ const SAMPLE_DISHES = [
       carbs: 48,
       fats: 16,
       fiber: 8,
-      portionDescription: '200g chicken breast, quinoa, broccoli, avocado'
+      portionDescription: '200g chicken breast, quinoa, broccoli, avocado',
+      confidenceScore: 97,
+      dishType: 'High-Protein Grain Bowl',
+      healthScore: 96,
+      hiddenCalorieWarning: 'Sesame dressing (~25 kcal)',
+      dietaryTags: ['High Protein', 'Lean Muscle', 'Gluten-Free'],
+      items: [
+        {
+          id: 'samp-4',
+          name: 'Charbroiled Chicken Breast',
+          calories: 260,
+          protein: 36,
+          carbs: 0,
+          fats: 6,
+          fiber: 0,
+          portion: '180g cutlet',
+          confidence: 99,
+          category: 'Protein' as const,
+          boundingBox: { ymin: 15, xmin: 25, ymax: 55, xmax: 75 }
+        },
+        {
+          id: 'samp-5',
+          name: 'Fluffy Quinoa Base',
+          calories: 180,
+          protein: 6,
+          carbs: 38,
+          fats: 3,
+          fiber: 4,
+          portion: '130g portion',
+          confidence: 96,
+          category: 'Carbs' as const,
+          boundingBox: { ymin: 45, xmin: 15, ymax: 85, xmax: 55 }
+        },
+        {
+          id: 'samp-6',
+          name: 'Steamed Broccoli & Avocado',
+          calories: 80,
+          protein: 2,
+          carbs: 10,
+          fats: 7,
+          fiber: 4,
+          portion: '110g mix',
+          confidence: 95,
+          category: 'Veggies/Fiber' as const,
+          boundingBox: { ymin: 45, xmin: 55, ymax: 85, xmax: 90 }
+        }
+      ]
     }
   },
   {
     label: 'Paneer Tikka Salad',
     icon: 'dinner_dining',
     nutrition: {
-      foodName: 'Paneer Tikka Protein Bowl',
+      foodName: 'Paneer Tikka Protein Salad Bowl',
       calories: 410,
       protein: 26,
       carbs: 22,
       fats: 24,
       fiber: 5,
-      portionDescription: '180g paneer tikka with veggies & mint yogurt'
+      portionDescription: '180g paneer tikka with veggies & mint yogurt',
+      confidenceScore: 96,
+      dishType: 'Vegetarian Fit Plate',
+      healthScore: 91,
+      hiddenCalorieWarning: 'Tandoori oil marinade (~30 kcal)',
+      dietaryTags: ['Vegetarian', 'Keto Friendly', 'Calcium Rich'],
+      items: [
+        {
+          id: 'samp-7',
+          name: 'Tandoori Paneer Tikka Cubes',
+          calories: 280,
+          protein: 20,
+          carbs: 8,
+          fats: 20,
+          fiber: 1,
+          portion: '160g portion',
+          confidence: 98,
+          category: 'Protein' as const,
+          boundingBox: { ymin: 20, xmin: 20, ymax: 60, xmax: 80 }
+        },
+        {
+          id: 'samp-8',
+          name: 'Crisp Bell Pepper & Onion Mix',
+          calories: 80,
+          protein: 3,
+          carbs: 12,
+          fats: 3,
+          fiber: 3,
+          portion: '100g sauteed',
+          confidence: 94,
+          category: 'Veggies/Fiber' as const,
+          boundingBox: { ymin: 55, xmin: 15, ymax: 90, xmax: 60 }
+        },
+        {
+          id: 'samp-9',
+          name: 'Mint Greek Yogurt Dip',
+          calories: 50,
+          protein: 3,
+          carbs: 2,
+          fats: 1,
+          fiber: 1,
+          portion: '35g side',
+          confidence: 95,
+          category: 'Fat/Sauce' as const,
+          boundingBox: { ymin: 60, xmin: 65, ymax: 88, xmax: 90 }
+        }
+      ]
     }
   },
   {
@@ -59,13 +203,46 @@ const SAMPLE_DISHES = [
       carbs: 34,
       fats: 4,
       fiber: 6,
-      portionDescription: '1 large glass (450ml)'
+      portionDescription: '1 large glass (450ml) • Hydrating Shake',
+      confidenceScore: 99,
+      dishType: 'Post-Workout Shake',
+      healthScore: 98,
+      hiddenCalorieWarning: 'None detected (Sugar-Free Base)',
+      dietaryTags: ['Post-Workout', 'Low Fat', 'Antioxidants'],
+      items: [
+        {
+          id: 'samp-10',
+          name: 'Whey Isolate & Almond Milk Base',
+          calories: 160,
+          protein: 26,
+          carbs: 4,
+          fats: 3,
+          fiber: 1,
+          portion: '300ml base',
+          confidence: 99,
+          category: 'Protein' as const,
+          boundingBox: { ymin: 10, xmin: 20, ymax: 90, xmax: 80 }
+        },
+        {
+          id: 'samp-11',
+          name: 'Blended Wild Blueberries & Strawberries',
+          calories: 130,
+          protein: 4,
+          carbs: 30,
+          fats: 1,
+          fiber: 5,
+          portion: '150g berries',
+          confidence: 97,
+          category: 'Beverage' as const,
+          boundingBox: { ymin: 20, xmin: 25, ymax: 80, xmax: 75 }
+        }
+      ]
     }
   }
 ];
 
 const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) => {
-  const [scanMode, setScanMode] = useState<'photo' | 'barcode'>('photo');
+  const [scanMode, setScanMode] = useState<'photo' | 'label' | 'barcode'>('photo');
   const [barcodeInput, setBarcodeInput] = useState<string>('');
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,24 +251,21 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
   const [multiplier, setMultiplier] = useState(1);
   const [cameraAvailable, setCameraAvailable] = useState<boolean>(true);
   const [loadingStatus, setLoadingStatus] = useState<string>('Analyzing Portion...');
+  
+  // WebRTC Live Viewfinder State
+  const [isLiveStreamActive, setIsLiveStreamActive] = useState<boolean>(false);
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+  const [activeItemHover, setActiveItemHover] = useState<string | null>(null);
+  const [showItemEditor, setShowItemEditor] = useState<boolean>(false);
+  const [newItemName, setNewItemName] = useState<string>('');
+  const [newItemCalories, setNewItemCalories] = useState<number>(100);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSampleScan = (sample: typeof SAMPLE_DISHES[0]) => {
-    triggerHaptic('medium');
-    setImage('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzEzZWMzNyIvPjwvc3ZnPg==');
-    setLoading(true);
-    setError(null);
-    setResult(null);
-    setLoadingStatus(`Analyzing ${sample.label} portions and macros...`);
-    
-    setTimeout(() => {
-      setResult(sample.nutrition);
-      setLoading(false);
-      triggerHaptic('success');
-    }, 900);
-  };
-
+  // Check camera hardware support
   useEffect(() => {
     if (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
       navigator.mediaDevices.enumerateDevices()
@@ -105,10 +279,89 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
     } else {
       setCameraAvailable(false);
     }
+
+    return () => {
+      stopLiveStream();
+    };
   }, []);
 
-  // Preprocesses images by resizing them to a maximum 800px on either side 
-  // and enhancing natural contrast to bring out texture, boundaries and volume details.
+  // WebRTC Live Stream Launcher
+  const startLiveStream = async (facing: 'environment' | 'user' = facingMode) => {
+    try {
+      stopLiveStream();
+      triggerHaptic('medium');
+      const constraints = {
+        video: {
+          facingMode: facing,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      mediaStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+      setIsLiveStreamActive(true);
+      setError(null);
+    } catch (err) {
+      console.warn("Live stream initialization notice:", err);
+      setIsLiveStreamActive(false);
+      // Fall back to native file camera picker
+      cameraInputRef.current?.click();
+    }
+  };
+
+  const stopLiveStream = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    setIsLiveStreamActive(false);
+  };
+
+  const toggleFacingMode = () => {
+    const nextFacing = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(nextFacing);
+    if (isLiveStreamActive) {
+      startLiveStream(nextFacing);
+    }
+  };
+
+  const captureLiveFrame = () => {
+    if (!videoRef.current) return;
+    triggerHaptic('heavy');
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 800;
+    canvas.height = video.videoHeight || 800;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      setImage(dataUrl);
+      stopLiveStream();
+      processImageAnalysis(dataUrl);
+    }
+  };
+
+  const handleSampleScan = (sample: typeof SAMPLE_DISHES[0]) => {
+    stopLiveStream();
+    triggerHaptic('medium');
+    setImage('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzEzZWMzNyIvPjwvc3ZnPg==');
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    setLoadingStatus(`Analyzing multi-item components for ${sample.label}...`);
+    
+    setTimeout(() => {
+      setResult(sample.nutrition as PackagedProductData);
+      setLoading(false);
+      triggerHaptic('success');
+    }, 850);
+  };
+
   const preprocessImage = (dataUrl: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -122,7 +375,7 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
             return;
           }
 
-          const maxDim = 800;
+          const maxDim = 900;
           let width = img.width;
           let height = img.height;
 
@@ -139,13 +392,12 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
           canvas.width = width;
           canvas.height = height;
 
-          // Draw onto canvas
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Enhance contrast (by 20%) to assist LLM with border and shadow estimation
+          // Contrast enhancement
           const imgData = ctx.getImageData(0, 0, width, height);
           const data = imgData.data;
-          const contrast = 20; 
+          const contrast = 18; 
           const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
 
           for (let i = 0; i < data.length; i += 4) {
@@ -155,9 +407,8 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
           }
 
           ctx.putImageData(imgData, 0, 0);
-          resolve(canvas.toDataURL('image/jpeg', 0.85));
+          resolve(canvas.toDataURL('image/jpeg', 0.88));
         } catch (e) {
-          console.error("CameraScan image preprocessing warning:", e);
           resolve(dataUrl);
         }
       };
@@ -165,6 +416,53 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
         resolve(dataUrl);
       };
     });
+  };
+
+  const processImageAnalysis = async (rawBase64: string) => {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    if (scanMode === 'label') {
+      setLoadingStatus('Scanning Nutrition Label OCR & Serving Sizes...');
+    } else if (scanMode === 'barcode') {
+      setLoadingStatus('OCR Scanning Packaged Product, Barcode & Ingredients...');
+    } else {
+      setLoadingStatus('Detecting multi-item components, portions, and hidden macros...');
+    }
+
+    try {
+      const processedBase64 = await preprocessImage(rawBase64);
+      const mimeType = processedBase64.match(/data:([^;]+);base64/)?.[1] || 'image/jpeg';
+      const base64Data = processedBase64.split(',')[1];
+
+      let successResult: PackagedProductData | null = null;
+      
+      if (scanMode === 'label') {
+        successResult = await analyzeNutritionLabel(base64Data, mimeType);
+      } else if (scanMode === 'barcode') {
+        successResult = await analyzePackagedProductWithBarcode(base64Data, mimeType, user);
+      } else {
+        successResult = await analyzeFoodImage(base64Data, mimeType, user);
+      }
+
+      if (successResult && successResult.foodName && successResult.calories) {
+        setResult(successResult);
+        triggerHaptic('success');
+      } else {
+        throw new Error("Failed to extract food profile from image");
+      }
+    } catch (err: any) {
+      console.error("AI Scan Error: ", err);
+      let errMessage = err?.message || String(err);
+      if (errMessage.includes('API key') || errMessage.includes('API_KEY_INVALID')) {
+        errMessage = 'Custom Gemini API Key missing or invalid. Check your Profile Settings or try our instant sample AI demo below.';
+      }
+      setError(errMessage);
+      triggerHaptic('error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,66 +473,9 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
     const reader = new FileReader();
     reader.onloadend = async () => {
       const rawBase64 = reader.result as string;
-      setImage(rawBase64); // Display raw user image instantly for visual responsive feedback
-      setLoading(true);
-      setError(null);
-      setResult(null);
-      setLoadingStatus(scanMode === 'barcode' ? 'Reading Packaged Barcode & Ingredients...' : 'Preprocessing image...');
-
-      try {
-        // Step 1: Pre-process (Resize & Contrast Enhancing)
-        const processedBase64 = await preprocessImage(rawBase64);
-        
-        const mimeType = processedBase64.match(/data:([^;]+);base64/)?.[1] || 'image/jpeg';
-        const base64Data = processedBase64.split(',')[1];
-
-        // Step 2: Retry mechanism with exponential backoff
-        const maxRetries = 2;
-        let attempt = 0;
-        let successResult: PackagedProductData | null = null;
-        let lastErr: any = null;
-
-        while (attempt < maxRetries) {
-          try {
-            if (scanMode === 'barcode') {
-              setLoadingStatus('OCR Scanning Packaged Product, Barcode & Ingredients...');
-              successResult = await analyzePackagedProductWithBarcode(base64Data, mimeType, user);
-            } else {
-              setLoadingStatus('Analyzing portions and macros...');
-              successResult = await analyzeFoodImage(base64Data, mimeType, user);
-            }
-            
-            // Confirm the response is valid and populated
-            if (successResult && successResult.foodName && successResult.calories) {
-              break; // Success!
-            }
-          } catch (err: any) {
-            attempt++;
-            lastErr = err;
-            if (attempt < maxRetries) {
-              await new Promise(resolve => setTimeout(resolve, 800));
-            }
-          }
-        }
-
-        if (successResult) {
-          setResult(successResult);
-          triggerHaptic('success');
-        } else {
-          throw lastErr || new Error("Failed to extract food profile after retry attempts");
-        }
-
-      } catch (err: any) {
-        console.error("AI Scan Error: ", err);
-        let errMessage = err?.message || String(err);
-        if (errMessage.includes('API key') || errMessage.includes('API_KEY_INVALID') || errMessage.includes('{')) {
-          errMessage = 'Custom Gemini API Key missing or invalid. Please check your API Key in Profile Settings or use our 1-click sample scanner below.';
-        }
-        setError(errMessage);
-        triggerHaptic('error');
-      } finally {
-        setLoading(false);
-      }
+      setImage(rawBase64);
+      stopLiveStream();
+      processImageAnalysis(rawBase64);
     };
     reader.readAsDataURL(file);
   };
@@ -243,6 +484,7 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
     const code = codeToSearch || barcodeInput;
     if (!code || !code.trim()) return;
     
+    stopLiveStream();
     triggerHaptic('medium');
     setLoading(true);
     setError(null);
@@ -262,6 +504,77 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
     }
   };
 
+  // Itemized Drawer Modifications
+  const handleScaleItemPortion = (itemId: string, scaleFactor: number) => {
+    if (!result || !result.items) return;
+    triggerHaptic('light');
+    const updatedItems = result.items.map(item => {
+      if (item.id === itemId) {
+        return {
+          ...item,
+          calories: Math.round(item.calories * scaleFactor),
+          protein: Math.round(item.protein * scaleFactor),
+          carbs: Math.round(item.carbs * scaleFactor),
+          fats: Math.round(item.fats * scaleFactor),
+          fiber: Math.round(item.fiber * scaleFactor),
+          portion: `${scaleFactor}x (${item.portion})`
+        };
+      }
+      return item;
+    });
+
+    recalculateTotalFromItems(updatedItems);
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    if (!result || !result.items) return;
+    triggerHaptic('medium');
+    const updatedItems = result.items.filter(item => item.id !== itemId);
+    recalculateTotalFromItems(updatedItems);
+  };
+
+  const handleAddCustomItem = () => {
+    if (!newItemName.trim() || !result) return;
+    triggerHaptic('success');
+    const newItem: FoodItemDetail = {
+      id: `custom-${Date.now()}`,
+      name: newItemName.trim(),
+      calories: newItemCalories,
+      protein: Math.round(newItemCalories * 0.15 / 4),
+      carbs: Math.round(newItemCalories * 0.5 / 4),
+      fats: Math.round(newItemCalories * 0.35 / 9),
+      fiber: 2,
+      portion: '1 added portion',
+      confidence: 100,
+      category: 'Snack'
+    };
+
+    const currentItems = result.items || [];
+    const updatedItems = [...currentItems, newItem];
+    recalculateTotalFromItems(updatedItems);
+    setNewItemName('');
+    setShowItemEditor(false);
+  };
+
+  const recalculateTotalFromItems = (updatedItems: FoodItemDetail[]) => {
+    if (!result) return;
+    const newCal = updatedItems.reduce((sum, item) => sum + item.calories, 0);
+    const newProt = updatedItems.reduce((sum, item) => sum + item.protein, 0);
+    const newCarbs = updatedItems.reduce((sum, item) => sum + item.carbs, 0);
+    const newFats = updatedItems.reduce((sum, item) => sum + item.fats, 0);
+    const newFiber = updatedItems.reduce((sum, item) => sum + item.fiber, 0);
+
+    setResult({
+      ...result,
+      items: updatedItems,
+      calories: newCal,
+      protein: newProt,
+      carbs: newCarbs,
+      fats: newFats,
+      fiber: newFiber
+    });
+  };
+
   const confirmAdd = () => {
     if (result) {
       triggerHaptic('success');
@@ -277,38 +590,59 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
         fats: Math.round(result.fats * multiplier),
         fiber: Math.round((result.fiber || 0) * multiplier),
       });
+      stopLiveStream();
       onClose();
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-background-dark z-[100] flex flex-col items-center p-6 overflow-y-auto custom-scrollbar">
-      <div className="w-full flex justify-between items-center mb-4 sticky top-0 bg-background-dark/80 backdrop-blur-md py-2 z-10">
-        <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-white active:scale-90 transition-transform">
-          <span className="material-icons-round">close</span>
+    <div className="fixed inset-0 bg-background-dark z-[100] flex flex-col items-center p-4 md:p-6 overflow-y-auto custom-scrollbar">
+      {/* Top Navigation Bar */}
+      <div className="w-full flex justify-between items-center mb-4 sticky top-0 bg-background-dark/80 backdrop-blur-md py-2 z-20">
+        <button 
+          onClick={() => { stopLiveStream(); onClose(); }} 
+          className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full text-white active:scale-90 transition-all border border-white/10"
+        >
+          <span className="material-icons-round text-base">close</span>
         </button>
+        
         <div className="flex flex-col items-center">
-          <h2 className="text-sm font-black uppercase tracking-[0.2em] text-primary">NutriVision AI</h2>
-          <div className="h-0.5 w-8 bg-primary/30 rounded-full mt-0.5"></div>
+          <div className="flex items-center space-x-1.5">
+            <span className="material-icons-round text-primary text-sm animate-pulse">center_focus_strong</span>
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">NutriVision Scanner</h2>
+          </div>
+          <p className="text-[9px] font-bold text-primary/80 uppercase tracking-widest mt-0.5">Multi-Item AI Precision</p>
         </div>
+
         <div className="w-10"></div>
       </div>
 
-      {/* Mode Switcher */}
-      <div className="bg-white/5 p-1 rounded-2xl flex space-x-1 mb-6 border border-white/10 w-full max-w-xs">
+      {/* 3-Way Mode Switcher */}
+      <div className="bg-white/5 p-1 rounded-2xl flex space-x-1 mb-5 border border-white/10 w-full max-w-sm shrink-0">
         <button
           onClick={() => { setScanMode('photo'); triggerHaptic('light'); }}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
-            scanMode === 'photo' ? 'bg-primary text-background-dark shadow-lg shadow-primary/20' : 'text-slate-400 hover:text-white'
+          className={`flex-1 py-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center space-x-1.5 ${
+            scanMode === 'photo' ? 'bg-primary text-background-dark shadow-lg shadow-primary/20 scale-[1.02]' : 'text-slate-400 hover:text-white'
           }`}
         >
-          <span className="material-icons-round text-sm">photo_camera</span>
-          <span>AI Vision</span>
+          <span className="material-icons-round text-sm">filter_center_focus</span>
+          <span>Multi-Food</span>
         </button>
+
+        <button
+          onClick={() => { setScanMode('label'); triggerHaptic('light'); }}
+          className={`flex-1 py-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center space-x-1.5 ${
+            scanMode === 'label' ? 'bg-primary text-background-dark shadow-lg shadow-primary/20 scale-[1.02]' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <span className="material-icons-round text-sm">receipt_long</span>
+          <span>Label OCR</span>
+        </button>
+
         <button
           onClick={() => { setScanMode('barcode'); triggerHaptic('light'); }}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
-            scanMode === 'barcode' ? 'bg-primary text-background-dark shadow-lg shadow-primary/20' : 'text-slate-400 hover:text-white'
+          className={`flex-1 py-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center space-x-1.5 ${
+            scanMode === 'barcode' ? 'bg-primary text-background-dark shadow-lg shadow-primary/20 scale-[1.02]' : 'text-slate-400 hover:text-white'
           }`}
         >
           <span className="material-icons-round text-sm">qr_code_scanner</span>
@@ -316,54 +650,110 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
         </button>
       </div>
 
-      {/* BARCODE SCANNER ENTRY VIEW */}
-      {scanMode === 'barcode' && !image && !result && !loading && (
-        <div className="w-full max-w-xs space-y-6 animate-in fade-in zoom-in-95 duration-300">
+      {/* WEBRTC LIVE VIEWFINDER SCREEN */}
+      {isLiveStreamActive && !image && !loading && (
+        <div className="w-full max-w-sm flex-1 flex flex-col items-center space-y-4 animate-in fade-in zoom-in-95 duration-300">
+          <div className="relative w-full aspect-[3/4] rounded-[2.5rem] overflow-hidden border-2 border-primary/40 shadow-[0_0_40px_rgba(19,236,55,0.2)] bg-black">
+            <video 
+              ref={videoRef} 
+              playsInline 
+              muted 
+              className="w-full h-full object-cover"
+            />
+
+            {/* Viewfinder HUD Overlays */}
+            <div className="absolute inset-0 border-[16px] border-black/30 pointer-events-none"></div>
+            
+            {/* Target Reticle corners */}
+            <div className="absolute top-8 left-8 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-xl"></div>
+            <div className="absolute top-8 right-8 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-xl"></div>
+            <div className="absolute bottom-8 left-8 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-xl"></div>
+            <div className="absolute bottom-8 right-8 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-xl"></div>
+
+            {/* Laser scanning beam */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_20px_#13ec37] animate-[scan_2.5s_ease-in-out_infinite]"></div>
+
+            {/* Floating Live Guidance Badge */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/30 flex items-center space-x-2 text-white text-[10px] font-black uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+              <span>{scanMode === 'label' ? 'Center Nutrition Facts Table' : scanMode === 'barcode' ? 'Align Barcode in View' : 'Center Plate for Multi-Food Scan'}</span>
+            </div>
+
+            {/* Camera Control Overlay */}
+            <div className="absolute bottom-4 right-4 flex space-x-2">
+              <button 
+                onClick={toggleFacingMode}
+                className="w-10 h-10 rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white active:scale-90 transition-transform"
+              >
+                <span className="material-icons-round text-lg">flip_camera_ios</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Shutter Controls */}
+          <div className="flex items-center justify-center space-x-6 w-full pt-2">
+            <button 
+              onClick={() => { stopLiveStream(); fileInputRef.current?.click(); }}
+              className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 active:scale-95 transition-all"
+              title="Gallery Upload"
+            >
+              <span className="material-icons-round text-xl">collections</span>
+            </button>
+
+            <button 
+              onClick={captureLiveFrame}
+              className="w-20 h-20 rounded-full bg-gradient-to-r from-[#13ec37] to-[#10b981] p-1.5 shadow-[0_0_30px_rgba(19,236,55,0.5)] active:scale-90 transition-all hover:scale-105 flex items-center justify-center"
+            >
+              <div className="w-full h-full rounded-full border-4 border-black/40 bg-white/20 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-black/80"></div>
+              </div>
+            </button>
+
+            <button 
+              onClick={stopLiveStream}
+              className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 active:scale-95 transition-all"
+              title="Cancel Live View"
+            >
+              <span className="material-icons-round text-xl">videocam_off</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* BARCODE SEARCH MODE VIEW */}
+      {scanMode === 'barcode' && !image && !result && !loading && !isLiveStreamActive && (
+        <div className="w-full max-w-xs space-y-5 animate-in fade-in zoom-in-95 duration-300">
           <div className="glass-card p-6 rounded-3xl border border-white/10 space-y-4 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto text-primary">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto text-primary border border-primary/20">
               <span className="material-icons-round text-3xl">qr_code_scanner</span>
             </div>
             <div>
-              <h3 className="text-lg font-black text-white">Barcode & Packaged Scanner</h3>
-              <p className="text-slate-400 text-xs mt-1">Snap a photo of any packaged product or enter barcode for full ingredient analysis.</p>
+              <h3 className="text-base font-black text-white">Barcode & Packaged Product</h3>
+              <p className="text-slate-400 text-xs mt-1">Scan package barcodes or search global food databases instantly.</p>
             </div>
 
-            {/* Packaged Product Camera / Photo Buttons */}
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2.5 pt-1">
               <button 
-                onClick={() => {
-                  triggerHaptic('medium');
-                  if (!cameraAvailable) {
-                    fileInputRef.current?.click();
-                  } else {
-                    cameraInputRef.current?.click();
-                  }
-                }}
-                className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-[#13ec37] via-[#22c55e] to-[#10b981] text-black font-black py-3.5 px-5 rounded-2xl shadow-[0_10px_25px_rgba(19,236,55,0.3)] hover:shadow-[0_12px_30px_rgba(19,236,55,0.4)] hover:scale-[1.02] active:scale-95 transition-all duration-300 text-xs uppercase tracking-[0.15em] border border-emerald-300/30 group"
+                onClick={() => startLiveStream('environment')}
+                className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-[#13ec37] via-[#22c55e] to-[#10b981] text-black font-black py-3.5 px-5 rounded-2xl shadow-[0_10px_25px_rgba(19,236,55,0.3)] hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.15em] border border-emerald-300/30 group"
               >
-                <div className="w-6 h-6 rounded-lg bg-black/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <span className="material-icons-round text-sm text-black">photo_camera</span>
+                <div className="w-6 h-6 rounded-lg bg-black/20 flex items-center justify-center shrink-0">
+                  <span className="material-icons-round text-sm text-black">videocam</span>
                 </div>
-                <span>Snap Packaged Product</span>
+                <span>Start Live Barcode Stream</span>
               </button>
 
               <button 
-                onClick={() => {
-                  triggerHaptic('light');
-                  fileInputRef.current?.click();
-                }}
-                className="w-full flex items-center justify-center space-x-3 glass-card bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 hover:border-primary/40 text-white font-black py-3.5 px-5 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-300 text-xs uppercase tracking-[0.15em] group"
+                onClick={() => { triggerHaptic('light'); fileInputRef.current?.click(); }}
+                className="w-full flex items-center justify-center space-x-3 glass-card bg-white/10 hover:bg-white/15 text-white font-black py-3.5 px-5 rounded-2xl border border-white/20 active:scale-95 transition-all text-xs uppercase tracking-[0.15em]"
               >
-                <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center shrink-0 text-primary group-hover:scale-110 transition-transform">
-                  <span className="material-icons-round text-sm">collections</span>
-                </div>
+                <span className="material-icons-round text-sm text-primary">collections</span>
                 <span>Upload Product Image</span>
               </button>
             </div>
 
-            {/* Manual Barcode Input Form */}
-            <div className="space-y-2 pt-3 border-t border-white/10">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block text-left">Or Type EAN Barcode Number:</span>
+            <div className="space-y-2 pt-3 border-t border-white/10 text-left">
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">Or Enter Barcode Number:</span>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -381,7 +771,7 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
                 </button>
               </div>
 
-              <div className="pt-2 text-left">
+              <div className="pt-2">
                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block mb-2">Try Sample Barcodes:</span>
                 <div className="flex flex-wrap gap-1.5">
                   {[
@@ -404,72 +794,83 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
         </div>
       )}
 
-      {/* AI VISION PHOTO ENTRY VIEW */}
-      {scanMode === 'photo' && !image && !result && !loading && (
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 max-w-xs animate-in fade-in zoom-in-95 duration-500">
+      {/* LABEL OCR MODE VIEW */}
+      {scanMode === 'label' && !image && !result && !loading && !isLiveStreamActive && (
+        <div className="w-full max-w-xs space-y-5 animate-in fade-in zoom-in-95 duration-300">
+          <div className="glass-card p-6 rounded-3xl border border-white/10 space-y-4 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto text-primary border border-primary/20">
+              <span className="material-icons-round text-3xl">receipt_long</span>
+            </div>
+            <div>
+              <h3 className="text-base font-black text-white">Nutrition Facts Label OCR</h3>
+              <p className="text-slate-400 text-xs mt-1">Point your camera directly at the nutrition table on the back of any food package.</p>
+            </div>
+
+            <div className="space-y-2.5 pt-1">
+              <button 
+                onClick={() => startLiveStream('environment')}
+                className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-[#13ec37] via-[#22c55e] to-[#10b981] text-black font-black py-3.5 px-5 rounded-2xl shadow-[0_10px_25px_rgba(19,236,55,0.3)] hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.15em] border border-emerald-300/30 group"
+              >
+                <div className="w-6 h-6 rounded-lg bg-black/20 flex items-center justify-center shrink-0">
+                  <span className="material-icons-round text-sm text-black">photo_camera</span>
+                </div>
+                <span>Open Label Scanner</span>
+              </button>
+
+              <button 
+                onClick={() => { triggerHaptic('light'); fileInputRef.current?.click(); }}
+                className="w-full flex items-center justify-center space-x-3 glass-card bg-white/10 hover:bg-white/15 text-white font-black py-3.5 px-5 rounded-2xl border border-white/20 active:scale-95 transition-all text-xs uppercase tracking-[0.15em]"
+              >
+                <span className="material-icons-round text-sm text-primary">collections</span>
+                <span>Upload Label Photo</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI MULTI-FOOD PHOTO ENTRY VIEW */}
+      {scanMode === 'photo' && !image && !result && !loading && !isLiveStreamActive && (
+        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 max-w-xs animate-in fade-in zoom-in-95 duration-500">
           <div className="relative group">
             <div className="absolute -inset-4 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/30 transition-all duration-700 animate-pulse"></div>
-            <div className="w-64 h-64 border-2 border-dashed border-primary/40 rounded-[2.5rem] flex items-center justify-center bg-primary/5 relative overflow-hidden transition-all duration-500">
-              <span className="material-icons-round text-7xl text-primary animate-bounce">camera_enhance</span>
+            <div className="w-56 h-56 border-2 border-dashed border-primary/40 rounded-[2.5rem] flex items-center justify-center bg-primary/5 relative overflow-hidden transition-all duration-500">
+              <span className="material-icons-round text-6xl text-primary animate-bounce">center_focus_strong</span>
               <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent"></div>
             </div>
           </div>
           
-          <div className="space-y-3">
-            <h3 className="text-2xl font-black tracking-tight">AI Vision Scan</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Our AI calculates macros by visually estimating the portion size of your meal.
+          <div className="space-y-2">
+            <h3 className="text-xl font-black tracking-tight text-white">Multi-Food Vision Scanner</h3>
+            <p className="text-slate-400 text-xs leading-relaxed">
+              Detects every component, side dish, sauce, and portion size on your plate with forensic accuracy.
             </p>
           </div>
 
           <div className="w-full space-y-3">
-            {!cameraAvailable && (
-              <div className="w-full bg-orange-500/10 border border-orange-500/20 p-4.5 rounded-2xl flex items-start space-x-3 text-left animate-in fade-in duration-300">
-                <span className="material-icons-round text-orange-400 mt-0.5">no_photography</span>
-                <div>
-                  <p className="text-[11px] font-black text-orange-400 uppercase tracking-widest leading-none">Camera Unavailable</p>
-                  <p className="text-[10px] text-white/60 font-medium leading-relaxed mt-1">
-                    No active camera stream detected. Select a meal picture from your local photobook/gallery to start food recognition.
-                  </p>
-                </div>
-              </div>
-            )}
-
             <button 
-              onClick={() => {
-                triggerHaptic('medium');
-                if (!cameraAvailable) {
-                  fileInputRef.current?.click();
-                } else {
-                  cameraInputRef.current?.click();
-                }
-              }}
-              className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-[#13ec37] via-[#22c55e] to-[#10b981] text-black font-black py-4 px-6 rounded-2xl shadow-[0_10px_30px_rgba(19,236,55,0.35)] hover:shadow-[0_12px_35px_rgba(19,236,55,0.45)] hover:scale-[1.02] active:scale-95 transition-all duration-300 text-xs uppercase tracking-[0.15em] border border-emerald-300/30 group"
+              onClick={() => startLiveStream('environment')}
+              className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-[#13ec37] via-[#22c55e] to-[#10b981] text-black font-black py-4 px-6 rounded-2xl shadow-[0_10px_30px_rgba(19,236,55,0.35)] hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.15em] border border-emerald-300/30 group"
             >
               <div className="w-7 h-7 rounded-xl bg-black/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <span className="material-icons-round text-base text-black">
-                  {!cameraAvailable ? 'photo_library' : 'photo_camera'}
-                </span>
+                <span className="material-icons-round text-base text-black">videocam</span>
               </div>
-              <span>{!cameraAvailable ? 'Select Photo File' : 'Take Photo'}</span>
+              <span>Start Live Viewfinder</span>
             </button>
 
             <button 
-              onClick={() => {
-                triggerHaptic('light');
-                fileInputRef.current?.click();
-              }}
-              className="w-full flex items-center justify-center space-x-3 glass-card bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 hover:border-primary/40 text-white font-black py-4 px-6 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-300 text-xs uppercase tracking-[0.15em] group"
+              onClick={() => { triggerHaptic('light'); fileInputRef.current?.click(); }}
+              className="w-full flex items-center justify-center space-x-3 glass-card bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 text-white font-black py-3.5 px-6 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.15em] group"
             >
-              <div className="w-7 h-7 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-primary group-hover:scale-110 transition-transform">
+              <div className="w-6 h-6 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-primary group-hover:scale-110 transition-transform">
                 <span className="material-icons-round text-base">collections</span>
               </div>
-              <span>Choose from Gallery</span>
+              <span>Upload Photo File</span>
             </button>
 
-            {/* Instant Sample Food Cards */}
+            {/* Instant Sample Multi-Food Cards */}
             <div className="w-full text-left pt-3 border-t border-white/10 space-y-2">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">Or Try Instant AI Vision Demo:</span>
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">Or Try Multi-Item AI Demo:</span>
               <div className="grid grid-cols-2 gap-2">
                 {SAMPLE_DISHES.map((sample, idx) => (
                   <button
@@ -482,7 +883,7 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
                     </div>
                     <div className="min-w-0">
                       <p className="text-[10px] font-bold text-white truncate">{sample.label}</p>
-                      <p className="text-[8px] font-semibold text-primary">{sample.nutrition.calories} kcal</p>
+                      <p className="text-[8px] font-semibold text-primary">{sample.nutrition.calories} kcal • {sample.nutrition.items.length} items</p>
                     </div>
                   </button>
                 ))}
@@ -492,7 +893,7 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
         </div>
       )}
 
-      {/* Global Hidden File Input Elements */}
+      {/* Global Hidden Input Elements */}
       <input 
         type="file" 
         accept="image/*" 
@@ -509,18 +910,61 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
         onChange={handleFileChange}
       />
 
-      {/* LOADING OR RESULT VIEW */}
-      {(image || loading || result || error) && (
-        <div className="flex-1 w-full max-w-sm flex flex-col space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-500">
+      {/* SCANNING ANALYSIS OR RESULT DISPLAY */}
+      {(image || loading || result || error) && !isLiveStreamActive && (
+        <div className="flex-1 w-full max-w-sm flex flex-col space-y-5 animate-in fade-in slide-in-from-bottom-8 duration-500">
+          
+          {/* IMAGE PREVIEW WITH INTERACTIVE BOUNDING BOX OVERLAYS */}
           {image && (
-            <div className="relative w-full aspect-square rounded-[2rem] overflow-hidden border-2 border-white/5 shadow-2xl group">
+            <div className="relative w-full aspect-square rounded-[2.5rem] overflow-hidden border-2 border-white/10 shadow-2xl group bg-black">
               <img src={image} alt="Scanned Food" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               
+              {/* Bounding Box Visual Overlay Badges */}
+              {result && result.items && result.items.length > 0 && !loading && (
+                <div className="absolute inset-0 pointer-events-auto">
+                  {result.items.map((item) => {
+                    const box = item.boundingBox;
+                    if (!box) return null;
+                    const isHovered = activeItemHover === item.id;
+                    return (
+                      <div
+                        key={item.id}
+                        onMouseEnter={() => setActiveItemHover(item.id)}
+                        onMouseLeave={() => setActiveItemHover(null)}
+                        onClick={() => {
+                          setActiveItemHover(item.id);
+                          triggerHaptic('light');
+                        }}
+                        style={{
+                          top: `${box.ymin}%`,
+                          left: `${box.xmin}%`,
+                          width: `${Math.max(15, box.xmax - box.xmin)}%`,
+                          height: `${Math.max(15, box.ymax - box.ymin)}%`,
+                        }}
+                        className={`absolute border-2 rounded-2xl transition-all duration-300 cursor-pointer flex flex-col justify-between p-1.5 ${
+                          isHovered 
+                            ? 'border-primary bg-primary/20 shadow-[0_0_20px_#13ec37] z-20 scale-105' 
+                            : 'border-white/60 bg-black/30 hover:border-primary hover:bg-primary/10'
+                        }`}
+                      >
+                        <span className="text-[8px] font-black bg-black/80 text-primary px-1.5 py-0.5 rounded-full self-start truncate max-w-full">
+                          {item.name}
+                        </span>
+                        <span className="text-[8px] font-bold bg-primary text-black px-1.5 py-0.5 rounded-full self-end">
+                          {item.calories} kcal
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Scanning Animation Header overlay */}
               {loading && (
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-center px-4">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-primary/50 shadow-[0_0_15px_rgba(19,236,55,1)] animate-[scan_2s_ease-in-out_infinite]"></div>
-                  <div className="p-4 bg-black/40 rounded-2xl border border-white/10 backdrop-blur-md flex flex-col items-center max-w-[280px]">
-                    <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <div className="absolute inset-0 bg-black/70 backdrop-blur-md flex flex-col items-center justify-center text-center px-4">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-primary/50 shadow-[0_0_20px_#13ec37] animate-[scan_2s_ease-in-out_infinite]"></div>
+                  <div className="p-5 bg-black/50 rounded-3xl border border-white/10 backdrop-blur-lg flex flex-col items-center max-w-[280px]">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                     <p className="mt-4 text-primary font-black uppercase tracking-[0.2em] text-[10px] animate-pulse leading-relaxed">{loadingStatus}</p>
                   </div>
                 </div>
@@ -528,34 +972,52 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
             </div>
           )}
 
-          {!image && loading && (
-            <div className="glass-card rounded-[2rem] p-8 flex flex-col items-center text-center space-y-4 border border-white/10">
-              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-primary font-black uppercase tracking-widest text-xs animate-pulse">{loadingStatus}</p>
-            </div>
-          )}
-
-          {result && (
-            <div className="glass-card rounded-[2rem] p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 relative border border-white/10 shadow-2xl">
+          {/* ANALYSIS RESULT CARD & MULTI-ITEM DRAWER */}
+          {result && !loading && (
+            <div className="glass-card rounded-[2.5rem] p-6 space-y-5 animate-in fade-in slide-in-from-bottom-4 border border-white/10 shadow-2xl">
+              
+              {/* Header Title & Overall Confidence Rating */}
               <div className="flex justify-between items-start">
                 <div className="space-y-1 pr-2 flex-1">
                   <div className="flex items-center space-x-2">
-                    <span className="material-icons-round text-primary text-sm">auto_awesome</span>
-                    <h3 className="text-lg font-black text-white tracking-tight line-clamp-1">{result.foodName}</h3>
+                    <span className="material-icons-round text-primary text-base">center_focus_strong</span>
+                    <h3 className="text-lg font-black text-white tracking-tight leading-tight line-clamp-2">{result.foodName}</h3>
                   </div>
-                  <div className="bg-primary/10 border border-primary/20 rounded-xl px-3 py-1.5 mt-2">
-                    <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-0.5">Estimated Portion</p>
-                    <p className="text-xs font-bold text-white/90">{result.portionDescription}</p>
+                  
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {result.confidenceScore && (
+                      <span className="text-[9px] font-black bg-primary/20 border border-primary/30 text-primary px-2.5 py-0.5 rounded-full flex items-center space-x-1">
+                        <span className="material-icons-round text-[10px]">verified</span>
+                        <span>{result.confidenceScore}% AI Precision</span>
+                      </span>
+                    )}
+
+                    {result.healthScore && (
+                      <span className="text-[9px] font-black bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-2.5 py-0.5 rounded-full">
+                        Score: {result.healthScore}/100
+                      </span>
+                    )}
+
+                    {result.dishType && (
+                      <span className="text-[9px] font-semibold bg-white/10 text-white/80 px-2.5 py-0.5 rounded-full">
+                        {result.dishType}
+                      </span>
+                    )}
                   </div>
                 </div>
+
                 <div className="text-right shrink-0">
                   <p className="text-3xl font-black text-primary leading-tight">{Math.round((result.calories || 0) * multiplier)}</p>
-                  <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest">Total kcal</p>
+                  <p className="text-[9px] uppercase font-black text-slate-500 tracking-widest">Total kcal</p>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Fine-tune Portion</p>
+              {/* Portion Scaling Control */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center px-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overall Meal Scale</p>
+                  <p className="text-[10px] font-bold text-white/80">{result.portionDescription}</p>
+                </div>
                 <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/5">
                   {[0.5, 1, 1.5, 2].map((m) => (
                     <button
@@ -573,12 +1035,13 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
                 </div>
               </div>
 
+              {/* Plate Macro Overview Cards */}
               <div className="grid grid-cols-4 gap-2">
                 {[
                   { label: 'Prot', val: Math.round((result.protein || 0) * multiplier), color: 'text-primary' },
                   { label: 'Carb', val: Math.round((result.carbs || 0) * multiplier), color: 'text-white' },
-                  { label: 'Fat', val: Math.round((result.fats || 0) * multiplier), color: 'text-white/60' },
-                  { label: 'Fiber', val: Math.round((result.fiber || 0) * multiplier), color: 'text-green-400' },
+                  { label: 'Fat', val: Math.round((result.fats || 0) * multiplier), color: 'text-amber-400' },
+                  { label: 'Fiber', val: Math.round((result.fiber || 0) * multiplier), color: 'text-emerald-400' },
                 ].map((macro) => (
                   <div key={macro.label} className="text-center p-2.5 bg-white/5 rounded-2xl border border-white/5">
                     <p className={`text-sm font-black ${macro.color}`}>{macro.val}g</p>
@@ -587,7 +1050,134 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
                 ))}
               </div>
 
-              {/* Full Ingredient Breakdown List */}
+              {/* Hidden Calorie Warning Banner */}
+              {result.hiddenCalorieWarning && (
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3 flex items-start space-x-2.5 text-left">
+                  <span className="material-icons-round text-amber-400 text-sm mt-0.5">visibility</span>
+                  <div>
+                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Hidden Calorie Alert</p>
+                    <p className="text-[11px] text-amber-200/90 font-medium leading-tight mt-0.5">{result.hiddenCalorieWarning}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Dietary Badges */}
+              {result.dietaryTags && result.dietaryTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {result.dietaryTags.map((tag, i) => (
+                    <span key={i} className="text-[9px] font-bold bg-white/5 border border-white/10 text-white/90 px-2.5 py-1 rounded-xl">
+                      ✓ {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* MULTI-ITEM ITEMIZATION DRAWER */}
+              {result.items && result.items.length > 0 && (
+                <div className="space-y-3 pt-3 border-t border-white/10 text-left">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5">
+                      <span className="material-icons-round text-sm">checklist</span> Detected Items ({result.items.length}):
+                    </p>
+                    <button
+                      onClick={() => setShowItemEditor(!showItemEditor)}
+                      className="text-[10px] font-black text-primary hover:underline flex items-center space-x-1"
+                    >
+                      <span className="material-icons-round text-[11px]">add_circle</span>
+                      <span>Add Item</span>
+                    </button>
+                  </div>
+
+                  {/* Add Custom Component Form */}
+                  {showItemEditor && (
+                    <div className="p-3 bg-white/5 rounded-2xl border border-primary/30 space-y-2 animate-in fade-in duration-200">
+                      <p className="text-[10px] font-black text-white uppercase tracking-wider">Add Custom Plate Component</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="e.g. Extra Olive Oil / Sauce"
+                          value={newItemName}
+                          onChange={(e) => setNewItemName(e.target.value)}
+                          className="flex-[2] bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-primary"
+                        />
+                        <input
+                          type="number"
+                          placeholder="kcal"
+                          value={newItemCalories}
+                          onChange={(e) => setNewItemCalories(Number(e.target.value))}
+                          className="flex-1 bg-black/40 border border-white/10 rounded-xl px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-primary"
+                        />
+                        <button
+                          onClick={handleAddCustomItem}
+                          className="bg-primary text-black font-black px-3 rounded-xl text-xs hover:brightness-110 active:scale-95 transition-all"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Itemized Cards List */}
+                  <div className="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+                    {result.items.map((item) => {
+                      const isHovered = activeItemHover === item.id;
+                      return (
+                        <div
+                          key={item.id}
+                          onMouseEnter={() => setActiveItemHover(item.id)}
+                          onMouseLeave={() => setActiveItemHover(null)}
+                          className={`p-3 rounded-2xl border transition-all ${
+                            isHovered 
+                              ? 'bg-primary/10 border-primary shadow-lg shadow-primary/10' 
+                              : 'bg-white/5 border-white/5 hover:border-white/20'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center mb-1">
+                            <div className="flex items-center space-x-2 min-w-0">
+                              <span className="w-2 h-2 rounded-full bg-primary shrink-0"></span>
+                              <p className="text-xs font-black text-white truncate">{item.name}</p>
+                              {item.category && (
+                                <span className="text-[8px] font-bold bg-white/10 text-white/70 px-2 py-0.5 rounded-full shrink-0">
+                                  {item.category}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center space-x-2 shrink-0">
+                              <span className="text-xs font-black text-primary">{item.calories} kcal</span>
+                              <button
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="text-slate-500 hover:text-red-400 p-1 transition-colors"
+                                title="Remove Item"
+                              >
+                                <span className="material-icons-round text-sm">delete</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[10px] text-slate-400">
+                            <span>{item.portion} • {item.protein}g P | {item.carbs}g C | {item.fats}g F</span>
+                            
+                            <div className="flex space-x-1">
+                              {[0.5, 1.5].map((factor) => (
+                                <button
+                                  key={factor}
+                                  onClick={() => handleScaleItemPortion(item.id, factor)}
+                                  className="px-1.5 py-0.5 rounded bg-white/10 hover:bg-primary/20 text-white hover:text-primary transition-all font-bold"
+                                >
+                                  {factor === 0.5 ? '½x' : '1.5x'}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Full Ingredient List for Packaged Products */}
               {result.ingredientsList && result.ingredientsList.length > 0 && (
                 <div className="space-y-2 pt-3 border-t border-white/10 text-left">
                   <div className="flex items-center justify-between">
@@ -610,27 +1200,29 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
                 </div>
               )}
 
-              <div className="flex space-x-3">
-                 <button 
-                  onClick={() => { setImage(null); setResult(null); setError(null); }}
-                  className="flex-1 bg-white/5 border border-white/10 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest active:scale-[0.95] transition-all"
+              {/* Log / Reset Action Buttons */}
+              <div className="flex space-x-3 pt-2">
+                <button 
+                  onClick={() => { setImage(null); setResult(null); setError(null); startLiveStream('environment'); }}
+                  className="flex-1 bg-white/5 border border-white/10 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest active:scale-[0.95] transition-all hover:bg-white/10"
                 >
-                  Reset
+                  Rescan
                 </button>
                 <button 
                   onClick={confirmAdd}
-                  className="flex-[2] bg-primary text-black font-black py-4 rounded-2xl shadow-xl shadow-primary/10 hover:brightness-110 active:scale-[0.98] transition-all text-xs uppercase tracking-widest"
+                  className="flex-[2] bg-gradient-to-r from-[#13ec37] via-[#22c55e] to-[#10b981] text-black font-black py-4 rounded-2xl shadow-xl shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all text-xs uppercase tracking-widest"
                 >
-                  Log This Meal
+                  Log Plate to Diary
                 </button>
               </div>
             </div>
           )}
 
-          {error && (
+          {/* ERROR DISPLAY */}
+          {error && !loading && (
             <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-3xl text-red-400 text-center animate-in shake duration-500">
               <span className="material-icons-round text-3xl mb-2">error_outline</span>
-              <p className="text-sm font-bold leading-relaxed">{error}</p>
+              <p className="text-xs font-bold leading-relaxed">{error}</p>
               <button 
                 onClick={() => { setImage(null); setResult(null); setError(null); }}
                 className="mt-4 px-6 py-2 bg-red-500/20 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-500/30 transition-colors"

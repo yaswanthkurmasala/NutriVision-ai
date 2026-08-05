@@ -70,6 +70,25 @@ export interface FoodEntry {
   timestamp: Date;
 }
 
+export interface FoodItemDetail {
+  id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  fiber: number;
+  portion: string;
+  confidence?: number;
+  category?: 'Protein' | 'Carbs' | 'Veggies/Fiber' | 'Fat/Sauce' | 'Beverage' | 'Snack';
+  boundingBox?: {
+    ymin: number;
+    xmin: number;
+    ymax: number;
+    xmax: number;
+  };
+}
+
 export interface NutritionData {
   foodName: string;
   calories: number;
@@ -78,6 +97,18 @@ export interface NutritionData {
   fats: number;
   fiber: number;
   portionDescription: string;
+  items?: FoodItemDetail[];
+  confidenceScore?: number;
+  dishType?: string;
+  healthScore?: number;
+  hiddenCalorieWarning?: string;
+  dietaryTags?: string[];
+  microNutrients?: {
+    sodiumMg?: number;
+    potassiumMg?: number;
+    calciumMg?: number;
+    ironMg?: number;
+  };
 }
 
 export type View = 'home' | 'analytics' | 'diary' | 'recipes' | 'profile' | 'camera' | 'auth';
