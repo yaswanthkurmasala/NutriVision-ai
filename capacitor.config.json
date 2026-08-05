@@ -1,6 +1,6 @@
 {
   "appId": "com.nutrivision.ai",
-  "appName": "NutriVision AI",
+  "appName": "NutriVisionAI",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"

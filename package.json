@@ -13,7 +13,7 @@
     "cap:open": "cap open android"
   },
   "dependencies": {
-    "@capacitor/core": "^8.4.0",
+    "@capacitor/core": "^8.5.0",
     "@google/genai": "1.41.0",
     "firebase": "11.1.0",
     "framer-motion": "^12.36.0",
@@ -23,8 +23,8 @@
     "recharts": "^2.15.1"
   },
   "devDependencies": {
-    "@capacitor/android": "^8.4.0",
-    "@capacitor/cli": "^8.4.0",
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
