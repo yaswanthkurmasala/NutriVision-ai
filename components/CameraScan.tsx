@@ -1011,9 +1011,26 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
           {result && !loading && (
             <div className="glass-card rounded-[2.5rem] p-6 space-y-5 animate-in fade-in slide-in-from-bottom-4 border border-white/10 shadow-2xl">
               
+              {/* Photographed Image Display Thumbnail & Identified Name Tag */}
+              {image && (
+                <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-xl group">
+                  <img 
+                    src={image} 
+                    alt={result.foodName} 
+                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-3.5 text-left">
+                    <span className="text-[9px] font-black uppercase text-primary tracking-widest bg-black/70 px-2 py-0.5 rounded-md self-start border border-primary/30">
+                      Identified Fruit / Dish:
+                    </span>
+                    <h3 className="text-base font-black text-white tracking-tight mt-1">{result.foodName}</h3>
+                  </div>
+                </div>
+              )}
+
               {/* Header Title & Overall Confidence Rating */}
-              <div className="flex justify-between items-start">
-                <div className="space-y-1 pr-2 flex-1">
+              <div className="flex justify-between items-start pt-1">
+                <div className="space-y-1 pr-2 flex-1 text-left">
                   <div className="flex items-center space-x-2">
                     <span className="material-icons-round text-primary text-base">center_focus_strong</span>
                     <h3 className="text-lg font-black text-white tracking-tight leading-tight line-clamp-2">{result.foodName}</h3>
