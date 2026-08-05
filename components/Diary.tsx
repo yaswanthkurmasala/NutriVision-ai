@@ -175,6 +175,29 @@ export default function Diary({ entries, onAddManualEntry, onDeleteEntry }: Diar
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-black text-slate-500 tracking-widest ml-1">Fiber (g)</label>
+                  <input 
+                    type="number"
+                    value={formData.fiber || ''}
+                    onChange={e => setFormData({...formData, fiber: Number(e.target.value)})}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 focus:border-primary outline-none transition-all text-white text-xs"
+                    placeholder="e.g. 6"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-black text-slate-500 tracking-widest ml-1">Portion Size</label>
+                  <input 
+                    type="text"
+                    value={formData.portionDescription || ''}
+                    onChange={e => setFormData({...formData, portionDescription: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 focus:border-primary outline-none transition-all text-white text-xs"
+                    placeholder="e.g. 1 plate / 250g"
+                  />
+                </div>
+              </div>
+
               <button 
                 type="submit"
                 className="w-full bg-primary text-black font-black py-5 rounded-[1.8rem] shadow-xl shadow-primary/20 mt-4 active:scale-[0.98] transition-all uppercase tracking-widest text-xs"
