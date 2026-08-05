@@ -527,6 +527,15 @@ export const analyzeFoodImage = async (
               items: { type: Type.STRING },
               description: "Badges such as High Protein, Low Carb, Gluten-Free, Keto."
             },
+            ingredientsList: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+              description: "List of identified individual ingredients (e.g. Basmati Rice, Chicken Thigh, Turmeric, Ghee)."
+            },
+            cookingMethod: {
+              type: Type.STRING,
+              description: "Preparation technique (e.g. Pan-seared, Steamed, Deep-fried, Baked, Roasted)."
+            },
             items: {
               type: Type.ARRAY,
               items: {
@@ -568,13 +577,29 @@ export const analyzeFoodImage = async (
     const text = response.text;
     if (text) {
       const parsed = JSON.parse(text) as NutritionData;
-      // Ensure each item has a unique fallback ID if missing
-      if (parsed.items && Array.isArray(parsed.items)) {
+      
+      // Ensure each item has a unique ID and recalculate totals if itemized data is present
+      if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
         parsed.items = parsed.items.map((item, idx) => ({
           ...item,
           id: item.id || `item-${idx + 1}`
         }));
+
+        const itemCalSum = parsed.items.reduce((acc, it) => acc + (it.calories || 0), 0);
+        const itemPSum = parsed.items.reduce((acc, it) => acc + (it.protein || 0), 0);
+        const itemCSum = parsed.items.reduce((acc, it) => acc + (it.carbs || 0), 0);
+        const itemFSum = parsed.items.reduce((acc, it) => acc + (it.fats || 0), 0);
+        const itemFiSum = parsed.items.reduce((acc, it) => acc + (it.fiber || 0), 0);
+
+        if (itemCalSum > 0 && Math.abs(itemCalSum - parsed.calories) > 40) {
+          parsed.calories = itemCalSum;
+          parsed.protein = itemPSum;
+          parsed.carbs = itemCSum;
+          parsed.fats = itemFSum;
+          parsed.fiber = itemFiSum;
+        }
       }
+
       return parsed;
     }
   } catch (err: any) {

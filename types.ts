@@ -108,6 +108,8 @@ export interface NutritionData {
   healthScore?: number;
   hiddenCalorieWarning?: string;
   dietaryTags?: string[];
+  ingredientsList?: string[];
+  cookingMethod?: string;
   microNutrients?: {
     sodiumMg?: number;
     potassiumMg?: number;

@@ -1069,6 +1069,30 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
                 </div>
               )}
 
+              {/* Cooking Method & Identified Ingredients */}
+              {result.cookingMethod && (
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-300 bg-white/5 border border-white/10 px-3.5 py-2 rounded-xl text-left">
+                  <span className="material-icons-round text-primary text-sm">soup_kitchen</span>
+                  <span>Preparation: <strong className="text-white">{result.cookingMethod}</strong></span>
+                </div>
+              )}
+
+              {result.ingredientsList && result.ingredientsList.length > 0 && (
+                <div className="space-y-1.5 text-left bg-white/5 p-3 rounded-2xl border border-white/5">
+                  <p className="text-[9px] font-black uppercase text-primary tracking-widest flex items-center gap-1">
+                    <span className="material-icons-round text-xs">restaurant_menu</span>
+                    <span>Identified Recipe Ingredients:</span>
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {result.ingredientsList.map((ing, i) => (
+                      <span key={i} className="text-[9px] font-bold bg-primary/10 border border-primary/20 text-primary px-2.5 py-0.5 rounded-lg">
+                        • {ing}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Dietary Badges */}
               {result.dietaryTags && result.dietaryTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 pt-1">
