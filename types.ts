@@ -27,6 +27,11 @@ export interface CustomRecipe {
   fats: number;
   fiber: number;
   aiTip?: string;
+  category?: string;
+  difficulty?: 'Easy' | 'Medium' | 'Advanced';
+  rating?: number;
+  image?: string;
+  isFavorite?: boolean;
 }
 
 export interface UserProfile {
