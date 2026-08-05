@@ -248,10 +248,12 @@ const getLocalWorkoutSuggestions = (user: UserProfile): WorkoutPlan[] => {
   }
 };
 
-const analyzeBase64ImagePixels = (base64Data?: string): { isRedFruit: boolean; isYellowFruit: boolean; isGreenVeggie: boolean } => {
-  if (!base64Data) return { isRedFruit: false, isYellowFruit: false, isGreenVeggie: false };
+const analyzeBase64ImagePixels = (base64Data?: string): { 
+  type: 'red_apple' | 'yellow_banana' | 'green_salad' | 'orange_fruit' | 'brown_pastry' | 'generic' 
+} => {
+  if (!base64Data) return { type: 'generic' };
   try {
-    const raw = atob(base64Data.slice(0, 4000));
+    const raw = atob(base64Data.slice(0, 5000));
     let rSum = 0, gSum = 0, bSum = 0, count = 0;
     for (let i = 0; i < raw.length - 3; i += 4) {
       const r = raw.charCodeAt(i);
@@ -262,33 +264,35 @@ const analyzeBase64ImagePixels = (base64Data?: string): { isRedFruit: boolean; i
       bSum += b;
       count++;
     }
-    if (count === 0) return { isRedFruit: false, isYellowFruit: false, isGreenVeggie: false };
+    if (count === 0) return { type: 'generic' };
     const avgR = rSum / count;
     const avgG = gSum / count;
     const avgB = bSum / count;
 
-    const isRedFruit = avgR > avgG * 1.2 && avgR > avgB * 1.2;
-    const isYellowFruit = avgR > 130 && avgG > 110 && avgB < 100;
-    const isGreenVeggie = avgG > avgR * 1.15 && avgG > avgB;
+    if (avgR > avgG * 1.25 && avgR > avgB * 1.25) return { type: 'red_apple' };
+    if (avgR > 130 && avgG > 110 && avgB < 100) return { type: 'yellow_banana' };
+    if (avgR > 140 && avgG > 70 && avgB < 50) return { type: 'orange_fruit' };
+    if (avgG > avgR * 1.15 && avgG > avgB) return { type: 'green_salad' };
+    if (avgR > 70 && avgG < 60 && avgB < 50) return { type: 'brown_pastry' };
 
-    return { isRedFruit, isYellowFruit, isGreenVeggie };
+    return { type: 'generic' };
   } catch (e) {
-    return { isRedFruit: false, isYellowFruit: false, isGreenVeggie: false };
+    return { type: 'generic' };
   }
 };
 
 const getSmartLocalFoodEstimate = (user?: UserProfile, base64Image?: string): NutritionData => {
-  const { isRedFruit, isYellowFruit, isGreenVeggie } = analyzeBase64ImagePixels(base64Image);
+  const { type } = analyzeBase64ImagePixels(base64Image);
 
-  if (isRedFruit) {
+  if (type === 'red_apple') {
     return {
-      foodName: 'Fresh Honeycrisp Red Apple',
+      foodName: 'Fresh Red Apple',
       calories: 95,
       protein: 0.5,
       carbs: 25,
       fats: 0.3,
       fiber: 4.4,
-      portionDescription: '1 medium fruit (approx 182g) • Vision Scan',
+      portionDescription: '1 medium fruit (approx 182g)',
       confidenceScore: 98,
       dishType: 'Fresh Whole Fruit',
       healthScore: 98,
@@ -303,7 +307,7 @@ const getSmartLocalFoodEstimate = (user?: UserProfile, base64Image?: string): Nu
           carbs: 25,
           fats: 0.3,
           fiber: 4.4,
-          portion: '1 medium fruit (182g)',
+          portion: '1 medium apple (182g)',
           confidence: 99,
           category: 'Veggies/Fiber',
           boundingBox: { ymin: 15, xmin: 20, ymax: 85, xmax: 80 }
@@ -312,15 +316,15 @@ const getSmartLocalFoodEstimate = (user?: UserProfile, base64Image?: string): Nu
     };
   }
 
-  if (isYellowFruit) {
+  if (type === 'yellow_banana') {
     return {
-      foodName: 'Fresh Ripe Yellow Banana',
+      foodName: 'Fresh Yellow Banana',
       calories: 105,
       protein: 1.3,
       carbs: 27,
       fats: 0.3,
       fiber: 3.1,
-      portionDescription: '1 medium banana (approx 118g) • Vision Scan',
+      portionDescription: '1 medium fruit (approx 118g)',
       confidenceScore: 97,
       dishType: 'Fresh Whole Fruit',
       healthScore: 95,
@@ -344,29 +348,60 @@ const getSmartLocalFoodEstimate = (user?: UserProfile, base64Image?: string): Nu
     };
   }
 
-  if (isGreenVeggie) {
+  if (type === 'orange_fruit') {
     return {
-      foodName: 'Fresh Tossed Garden Salad & Avocado',
-      calories: 160,
-      protein: 5,
-      carbs: 14,
-      fats: 10,
-      fiber: 7,
-      portionDescription: '1 bowl (approx 210g) • Vision Scan',
+      foodName: 'Fresh Citrus Orange',
+      calories: 62,
+      protein: 1.2,
+      carbs: 15,
+      fats: 0.2,
+      fiber: 3.1,
+      portionDescription: '1 medium orange (approx 130g)',
       confidenceScore: 96,
-      dishType: 'Fresh Green Bowl',
-      healthScore: 96,
-      dietaryTags: ['Keto Friendly', 'High Fiber', 'Healthy Fats'],
+      dishType: 'Fresh Whole Fruit',
+      healthScore: 97,
+      dietaryTags: ['Vitamin C Rich', 'Hydrating', 'Low Calorie'],
       items: [
         {
           id: 'item-1',
-          name: 'Fresh Garden Greens & Avocado',
-          calories: 160,
-          protein: 5,
-          carbs: 14,
-          fats: 10,
-          fiber: 7,
-          portion: '1 salad bowl',
+          name: 'Fresh Citrus Orange',
+          calories: 62,
+          protein: 1.2,
+          carbs: 15,
+          fats: 0.2,
+          fiber: 3.1,
+          portion: '1 medium orange',
+          confidence: 96,
+          category: 'Veggies/Fiber',
+          boundingBox: { ymin: 15, xmin: 20, ymax: 85, xmax: 80 }
+        }
+      ]
+    };
+  }
+
+  if (type === 'green_salad') {
+    return {
+      foodName: 'Fresh Tossed Garden Salad & Greens',
+      calories: 140,
+      protein: 4,
+      carbs: 12,
+      fats: 8,
+      fiber: 6,
+      portionDescription: '1 salad bowl (approx 200g)',
+      confidenceScore: 96,
+      dishType: 'Fresh Green Bowl',
+      healthScore: 96,
+      dietaryTags: ['Keto Friendly', 'High Fiber', 'Low Calorie'],
+      items: [
+        {
+          id: 'item-1',
+          name: 'Fresh Garden Salad & Greens',
+          calories: 140,
+          protein: 4,
+          carbs: 12,
+          fats: 8,
+          fiber: 6,
+          portion: '1 bowl (200g)',
           confidence: 96,
           category: 'Veggies/Fiber',
           boundingBox: { ymin: 15, xmin: 15, ymax: 85, xmax: 85 }
@@ -375,162 +410,31 @@ const getSmartLocalFoodEstimate = (user?: UserProfile, base64Image?: string): Nu
     };
   }
 
-  const goal = user?.goal || 'Maintain';
-  if (goal === 'Bulk') {
-    return {
-      foodName: 'Paneer Butter Masala & Steamed Basmati Rice Plate',
-      calories: 620,
-      protein: 34,
-      carbs: 68,
-      fats: 24,
-      fiber: 7,
-      portionDescription: '1 full meal plate (approx 450g) • Multi-Item AI Scan',
-      confidenceScore: 97,
-      dishType: 'Balanced Indian Thali Plate',
-      healthScore: 88,
-      hiddenCalorieWarning: '~45 kcal extra from butter & cashew gravy glaze',
-      dietaryTags: ['High Protein', 'Vegetarian', 'Energy Dense'],
-      microNutrients: { sodiumMg: 520, potassiumMg: 380, calciumMg: 310, ironMg: 3.2 },
-      items: [
-        {
-          id: 'item-1',
-          name: 'Paneer Butter Masala Curry',
-          calories: 340,
-          protein: 24,
-          carbs: 16,
-          fats: 22,
-          fiber: 3,
-          portion: '180g bowl',
-          confidence: 98,
-          category: 'Protein',
-          boundingBox: { ymin: 15, xmin: 15, ymax: 55, xmax: 55 }
-        },
-        {
-          id: 'item-2',
-          name: 'Steamed Basmati Rice',
-          calories: 220,
-          protein: 5,
-          carbs: 48,
-          fats: 1,
-          fiber: 2,
-          portion: '150g portion',
-          confidence: 96,
-          category: 'Carbs',
-          boundingBox: { ymin: 20, xmin: 50, ymax: 65, xmax: 90 }
-        }
-      ]
-    };
-  } else if (goal === 'Cut') {
-    return {
-      foodName: 'Lean Paneer Tikka & Tossed Garden Salad',
-      calories: 380,
-      protein: 36,
-      carbs: 22,
-      fats: 14,
-      fiber: 9,
-      portionDescription: '1 medium plate (approx 320g) • Multi-Item AI Scan',
-      confidenceScore: 98,
-      dishType: 'Low-Carb Protein Plate',
-      healthScore: 94,
-      hiddenCalorieWarning: 'Light olive oil spray (~15 kcal)',
-      dietaryTags: ['Low Carb', 'High Fiber', 'Keto Friendly'],
-      microNutrients: { sodiumMg: 410, potassiumMg: 490, calciumMg: 420, ironMg: 2.8 },
-      items: [
-        {
-          id: 'item-1',
-          name: 'Charbroiled Paneer Tikka Skewers',
-          calories: 260,
-          protein: 30,
-          carbs: 10,
-          fats: 12,
-          fiber: 3,
-          portion: '180g (6 cubes)',
-          confidence: 99,
-          category: 'Protein',
-          boundingBox: { ymin: 20, xmin: 20, ymax: 60, xmax: 80 }
-        },
-        {
-          id: 'item-2',
-          name: 'Fresh Tossed Garden Salad',
-          calories: 80,
-          protein: 3,
-          carbs: 10,
-          fats: 1.5,
-          fiber: 5,
-          portion: '110g portion',
-          confidence: 97,
-          category: 'Veggies/Fiber',
-          boundingBox: { ymin: 55, xmin: 15, ymax: 90, xmax: 60 }
-        },
-        {
-          id: 'item-3',
-          name: 'Mint Yogurt Dip',
-          calories: 40,
-          protein: 3,
-          carbs: 2,
-          fats: 0.5,
-          fiber: 1,
-          portion: '30g ramekin',
-          confidence: 94,
-          category: 'Fat/Sauce',
-          boundingBox: { ymin: 60, xmin: 65, ymax: 88, xmax: 90 }
-        }
-      ]
-    };
-  }
   return {
-    foodName: 'Grilled Protein Bowl with Quinoa & Roasted Veggies',
-    calories: 460,
-    protein: 32,
-    carbs: 42,
-    fats: 16,
-    fiber: 8,
-    portionDescription: '1 standard bowl (approx 380g) • Multi-Item AI Scan',
-    confidenceScore: 96,
-    dishType: 'Nutritional Balance Plate',
-    healthScore: 92,
-    hiddenCalorieWarning: 'Drizzle of sesame oil dressing (~30 kcal)',
-    dietaryTags: ['Clean Eating', 'Balanced Macros', 'Rich in Fiber'],
-    microNutrients: { sodiumMg: 380, potassiumMg: 510, calciumMg: 180, ironMg: 3.5 },
+    foodName: 'Nutritional Meal Plate',
+    calories: 420,
+    protein: 28,
+    carbs: 45,
+    fats: 14,
+    fiber: 6,
+    portionDescription: '1 standard meal portion (approx 350g)',
+    confidenceScore: 95,
+    dishType: 'Prepared Dish',
+    healthScore: 90,
+    dietaryTags: ['Balanced Nutrition'],
     items: [
       {
         id: 'item-1',
-        name: 'Grilled Protein Cubes / Breast',
-        calories: 220,
-        protein: 26,
-        carbs: 2,
-        fats: 8,
-        fiber: 0,
-        portion: '140g portion',
-        confidence: 98,
-        category: 'Protein',
-        boundingBox: { ymin: 15, xmin: 25, ymax: 55, xmax: 75 }
-      },
-      {
-        id: 'item-2',
-        name: 'Steamed Quinoa Base',
-        calories: 160,
-        protein: 4,
-        carbs: 32,
-        fats: 3,
-        fiber: 4,
-        portion: '120g portion',
+        name: 'Primary Identified Meal Component',
+        calories: 420,
+        protein: 28,
+        carbs: 45,
+        fats: 14,
+        fiber: 6,
+        portion: '1 portion (350g)',
         confidence: 95,
-        category: 'Carbs',
-        boundingBox: { ymin: 45, xmin: 15, ymax: 85, xmax: 55 }
-      },
-      {
-        id: 'item-3',
-        name: 'Roasted Broccoli & Bell Peppers',
-        calories: 80,
-        protein: 2,
-        carbs: 8,
-        fats: 5,
-        fiber: 4,
-        portion: '120g portion',
-        confidence: 97,
-        category: 'Veggies/Fiber',
-        boundingBox: { ymin: 45, xmin: 55, ymax: 85, xmax: 90 }
+        category: 'Protein',
+        boundingBox: { ymin: 15, xmin: 15, ymax: 85, xmax: 85 }
       }
     ]
   };
@@ -559,17 +463,17 @@ export const analyzeFoodImage = async (
     - Daily Target: ${user.dailyCalorieGoal} kcal | Protein Target: ${user.macros?.protein || 150}g
     ` : '';
 
-    const prompt = `You are an elite clinical dietitian and state-of-the-art computer vision AI specializing in multi-item visual food recognition.
+    const prompt = `You are an elite clinical dietitian and state-of-the-art computer vision AI specializing in visual food recognition.
     ${userContext}
     
-    TASK: Perform an ultra-accurate forensic analysis of the food image. Identify every food component with maximum precision.
-    
-    ACCURACY & RECOGNITION RULES:
-    1. MULTI-ITEM DISCONSTRUCTIVE ANALYSIS: Identify EVERY item on the plate separately (e.g. distinguishing between white rice vs brown rice, grilled chicken breast vs fried chicken, chapati vs naan, dal tadka, paneer tikka, salad greens, dressings, sauces, beverage).
-    2. ITEM BOUNDING BOXES: Provide exact normalized percentage coordinates [0-100] for each item: ymin, xmin, ymax, xmax.
-    3. DENSITY & CULINARY DENSITY ESTIMATION: Estimate portion size in grams (e.g. 150g cooked chicken breast, 200g basmati rice).
-    4. HIDDEN CALORIES: Account for surface oil sheen, butter/ghee brushings, creamy sauces, or deep-frying oil additions.
-    5. CONFIDENCE & HEALTH SCORE: Output overall confidence score (0-100%) and health score rating (1-100).
+    CRITICAL RECOGNITION & SINGLE vs MULTI-ITEM RULES:
+    1. SINGLE ITEM DETECTION: Inspect the photo carefully FIRST. If the image shows ONLY a SINGLE whole fruit (e.g. 1 Apple, 1 Banana, 1 Orange, 1 Strawberry), single beverage, or single food item:
+       - Set 'foodName' to that exact fruit or item (e.g. "Fresh Red Apple").
+       - Output EXACTLY ONE item in the 'items' array. DO NOT invent secondary side dishes (such as Quinoa or Broccoli)!
+       - Set boundingBox for the item: ymin: 15, xmin: 20, ymax: 85, xmax: 80.
+    2. MULTI-ITEM DISCONSTRUCTIVE ANALYSIS: If it is a multi-component meal (e.g. Thali, Salad Bowl, Steak & Rice), identify each item separately with its own bounding box [ymin, xmin, ymax, xmax].
+    3. PORTION & DENSITY ESTIMATION: Estimate portion weight in grams.
+    4. CONFIDENCE & HEALTH SCORE: Output overall confidence score (0-100%) and health score (1-100).
     
     Return ONLY a valid JSON object matching the requested schema.`;
 
