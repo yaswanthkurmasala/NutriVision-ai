@@ -849,22 +849,30 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
 
           <div className="w-full space-y-3">
             <button 
-              onClick={() => startLiveStream('environment')}
+              onClick={() => { stopLiveStream(); triggerHaptic('medium'); cameraInputRef.current?.click(); }}
               className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-[#13ec37] via-[#22c55e] to-[#10b981] text-black font-black py-4 px-6 rounded-2xl shadow-[0_10px_30px_rgba(19,236,55,0.35)] hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.15em] border border-emerald-300/30 group"
             >
               <div className="w-7 h-7 rounded-xl bg-black/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <span className="material-icons-round text-base text-black">videocam</span>
+                <span className="material-icons-round text-base text-black">photo_camera</span>
+              </div>
+              <span>Phone Camera (Native App)</span>
+            </button>
+
+            <button 
+              onClick={() => startLiveStream('environment')}
+              className="w-full flex items-center justify-center space-x-3 glass-card bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 text-white font-black py-3.5 px-6 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.15em] group"
+            >
+              <div className="w-6 h-6 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-primary group-hover:scale-110 transition-transform">
+                <span className="material-icons-round text-base">videocam</span>
               </div>
               <span>Start Live Viewfinder</span>
             </button>
 
             <button 
               onClick={() => { triggerHaptic('light'); fileInputRef.current?.click(); }}
-              className="w-full flex items-center justify-center space-x-3 glass-card bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 text-white font-black py-3.5 px-6 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.15em] group"
+              className="w-full flex items-center justify-center space-x-3 glass-card bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold py-3 px-6 rounded-2xl active:scale-95 transition-all text-xs uppercase tracking-[0.15em] group"
             >
-              <div className="w-6 h-6 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-primary group-hover:scale-110 transition-transform">
-                <span className="material-icons-round text-base">collections</span>
-              </div>
+              <span className="material-icons-round text-sm text-slate-400">collections</span>
               <span>Upload Photo File</span>
             </button>
 
@@ -1231,6 +1239,22 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
               </button>
             </div>
           )}
+          {/* Hidden File Inputs */}
+          <input 
+            type="file" 
+            accept="image/*" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            className="hidden" 
+          />
+          <input 
+            type="file" 
+            accept="image/*" 
+            capture="environment" 
+            ref={cameraInputRef} 
+            onChange={handleFileChange} 
+            className="hidden" 
+          />
         </div>
       )}
       <div className="h-10"></div>

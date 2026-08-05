@@ -446,6 +446,20 @@ export const analyzeFoodImage = async (
     - Daily Target: ${user.dailyCalorieGoal} kcal | Protein Target: ${user.macros?.protein || 150}g
     ` : '';
 
+    const prompt = `You are an elite clinical dietitian and state-of-the-art computer vision AI specializing in multi-item visual food recognition.
+    ${userContext}
+    
+    TASK: Perform an ultra-accurate forensic analysis of the food image. Identify every food component with maximum precision.
+    
+    ACCURACY & RECOGNITION RULES:
+    1. MULTI-ITEM DISCONSTRUCTIVE ANALYSIS: Identify EVERY item on the plate separately (e.g. distinguishing between white rice vs brown rice, grilled chicken breast vs fried chicken, chapati vs naan, dal tadka, paneer tikka, salad greens, dressings, sauces, beverage).
+    2. ITEM BOUNDING BOXES: Provide exact normalized percentage coordinates [0-100] for each item: ymin, xmin, ymax, xmax.
+    3. DENSITY & CULINARY DENSITY ESTIMATION: Estimate portion size in grams (e.g. 150g cooked chicken breast, 200g basmati rice).
+    4. HIDDEN CALORIES: Account for surface oil sheen, butter/ghee brushings, creamy sauces, or deep-frying oil additions.
+    5. CONFIDENCE & HEALTH SCORE: Output overall confidence score (0-100%) and health score rating (1-100).
+    
+    Return ONLY a valid JSON object matching the requested schema.`;
+
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: {
@@ -456,20 +470,7 @@ export const analyzeFoodImage = async (
               data: base64Image,
             },
           },
-          {
-            text: `You are an elite clinical nutritionist and expert computer vision AI specializing in multi-item dietary assessment.
-            ${userContext}
-            
-            TASK: Perform a deep forensic visual analysis of this food image with maximum precision.
-            
-            CRITICAL REQUIREMENTS:
-            1. MULTI-ITEM DETECTION: Identify EVERY distinct food component, main protein, carbohydrate side, vegetables, sauces, gravies, dressings, garnishes, and drinks visible in the photo.
-            2. BOUNDING BOXES: For each detected item, specify its bounding box in percentage coordinates normalized to [0, 100]: ymin, xmin, ymax, xmax (integers between 0 and 100).
-            3. PORTION & HIDDEN CALORIES ESTIMATION: Use visual depth, plate scaling, and standard culinary density to estimate weight in grams. Explicitly detect hidden calories (e.g. cooking oil, butter, dressings).
-            4. CONFIDENCE & HEALTH RATING: Rate overall confidence score (0-100) and health score (1-100).
-            
-            Return ONLY a valid JSON object matching the requested schema.`,
-          },
+          { text: prompt },
         ],
       },
       config: {
