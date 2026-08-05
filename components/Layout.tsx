@@ -37,13 +37,17 @@ const Layout: React.FC<LayoutProps> = ({
       {/* Full-width sticky top header with centered content */}
       <header className="sticky top-0 z-40 w-full bg-background-dark/90 backdrop-blur-xl border-b border-white/5 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => onViewChange('home')}>
-            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
-              <span className="material-icons-round text-xl">vital_signs</span>
+          <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => onViewChange('home')}>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/40 flex items-center justify-center text-primary shadow-lg shadow-primary/20 shrink-0 group-hover:scale-105 transition-transform">
+              <svg className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v10M7 12h10" />
+                <circle cx="12" cy="12" r="3" fill="#13ec37" />
+              </svg>
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-sm font-extrabold uppercase tracking-wider text-white">NutriVision AI</h1>
+                <h1 className="text-sm font-black uppercase tracking-wider text-white group-hover:text-primary transition-colors">NutriVision AI</h1>
                 <span className="text-[9px] font-black text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">PRO</span>
               </div>
             </div>
