@@ -553,6 +553,20 @@ export const analyzeFoodImage = async (
               type: Type.STRING,
               description: "Preparation technique (e.g. Pan-seared, Steamed, Deep-fried, Baked, Roasted)."
             },
+            microNutrients: {
+              type: Type.OBJECT,
+              properties: {
+                sugarsG: { type: Type.NUMBER, description: "Sugars in grams." },
+                saturatedFatG: { type: Type.NUMBER, description: "Saturated fat in grams." },
+                sodiumMg: { type: Type.NUMBER, description: "Sodium in mg." },
+                potassiumMg: { type: Type.NUMBER, description: "Potassium in mg." },
+                calciumMg: { type: Type.NUMBER, description: "Calcium in mg." },
+                ironMg: { type: Type.NUMBER, description: "Iron in mg." },
+                vitaminCMg: { type: Type.NUMBER, description: "Vitamin C in mg." },
+                vitaminDMcg: { type: Type.NUMBER, description: "Vitamin D in mcg." },
+                cholesterolMg: { type: Type.NUMBER, description: "Cholesterol in mg." }
+              }
+            },
             items: {
               type: Type.ARRAY,
               items: {

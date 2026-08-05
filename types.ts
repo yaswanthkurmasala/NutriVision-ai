@@ -111,10 +111,15 @@ export interface NutritionData {
   ingredientsList?: string[];
   cookingMethod?: string;
   microNutrients?: {
+    sugarsG?: number;
+    saturatedFatG?: number;
     sodiumMg?: number;
     potassiumMg?: number;
     calciumMg?: number;
     ironMg?: number;
+    vitaminCMg?: number;
+    vitaminDMcg?: number;
+    cholesterolMg?: number;
   };
 }
 

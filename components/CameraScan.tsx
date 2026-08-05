@@ -1085,6 +1085,54 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
                 ))}
               </div>
 
+              {/* Full Micronutrient Breakdown Grid */}
+              {result.microNutrients && (
+                <div className="bg-white/5 p-3.5 rounded-2xl border border-white/5 space-y-2 text-left">
+                  <p className="text-[9px] font-black uppercase text-primary tracking-widest flex items-center gap-1">
+                    <span className="material-icons-round text-xs">science</span>
+                    <span>Detected Micronutrients & Minerals:</span>
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 pt-0.5 text-[10px]">
+                    {result.microNutrients.sodiumMg !== undefined && (
+                      <div className="bg-white/5 px-2.5 py-1.5 rounded-xl border border-white/5">
+                        <span className="text-slate-400 block text-[8px] font-bold uppercase">Sodium</span>
+                        <span className="font-black text-white">{Math.round(result.microNutrients.sodiumMg * multiplier)} mg</span>
+                      </div>
+                    )}
+                    {result.microNutrients.potassiumMg !== undefined && (
+                      <div className="bg-white/5 px-2.5 py-1.5 rounded-xl border border-white/5">
+                        <span className="text-slate-400 block text-[8px] font-bold uppercase">Potassium</span>
+                        <span className="font-black text-white">{Math.round(result.microNutrients.potassiumMg * multiplier)} mg</span>
+                      </div>
+                    )}
+                    {result.microNutrients.calciumMg !== undefined && (
+                      <div className="bg-white/5 px-2.5 py-1.5 rounded-xl border border-white/5">
+                        <span className="text-slate-400 block text-[8px] font-bold uppercase">Calcium</span>
+                        <span className="font-black text-white">{Math.round(result.microNutrients.calciumMg * multiplier)} mg</span>
+                      </div>
+                    )}
+                    {result.microNutrients.ironMg !== undefined && (
+                      <div className="bg-white/5 px-2.5 py-1.5 rounded-xl border border-white/5">
+                        <span className="text-slate-400 block text-[8px] font-bold uppercase">Iron</span>
+                        <span className="font-black text-white">{result.microNutrients.ironMg} mg</span>
+                      </div>
+                    )}
+                    {result.microNutrients.sugarsG !== undefined && (
+                      <div className="bg-white/5 px-2.5 py-1.5 rounded-xl border border-white/5">
+                        <span className="text-slate-400 block text-[8px] font-bold uppercase">Sugars</span>
+                        <span className="font-black text-amber-300">{Math.round(result.microNutrients.sugarsG * multiplier)} g</span>
+                      </div>
+                    )}
+                    {result.microNutrients.vitaminCMg !== undefined && (
+                      <div className="bg-white/5 px-2.5 py-1.5 rounded-xl border border-white/5">
+                        <span className="text-slate-400 block text-[8px] font-bold uppercase">Vitamin C</span>
+                        <span className="font-black text-emerald-300">{result.microNutrients.vitaminCMg} mg</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Hidden Calorie Warning Banner */}
               {result.hiddenCalorieWarning && (
                 <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3 flex items-start space-x-2.5 text-left">
