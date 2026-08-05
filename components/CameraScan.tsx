@@ -285,30 +285,57 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
     };
   }, []);
 
-  // WebRTC Live Stream Launcher
+  // WebRTC Live Stream attachment sync effect
+  useEffect(() => {
+    if (isLiveStreamActive && videoRef.current && mediaStreamRef.current) {
+      videoRef.current.srcObject = mediaStreamRef.current;
+      videoRef.current.play().catch(e => console.warn("Video play exception:", e));
+    }
+  }, [isLiveStreamActive]);
+
+  // WebRTC Live Stream Launcher with 3-tier hardware fallback
   const startLiveStream = async (facing: 'environment' | 'user' = facingMode) => {
     try {
       stopLiveStream();
       triggerHaptic('medium');
-      const constraints = {
-        video: {
-          facingMode: facing,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      mediaStreamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-      setIsLiveStreamActive(true);
       setError(null);
-    } catch (err) {
+      
+      let stream: MediaStream | null = null;
+      
+      // Tier 1: Try ideal HD resolution with specified facing mode
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: facing,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
+      } catch (err1) {
+        // Tier 2: Try basic facing mode constraint without width/height requirements
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: facing }
+          });
+        } catch (err2) {
+          // Tier 3: Universal fallback to any default video device
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        }
+      }
+
+      if (stream) {
+        mediaStreamRef.current = stream;
+        setIsLiveStreamActive(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(e => console.warn("Video play error:", e));
+        }
+      }
+    } catch (err: any) {
       console.warn("Live stream initialization notice:", err);
       setIsLiveStreamActive(false);
-      // Fall back to native file camera picker
+      setError("Webcam stream unavailable. Use Phone Camera or File Upload below.");
+      // Fall back to native file camera picker if on mobile
       cameraInputRef.current?.click();
     }
   };
