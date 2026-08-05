@@ -293,6 +293,37 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
     }
   }, [isLiveStreamActive]);
 
+  // Real-time Barcode Detector hardware loop effect
+  useEffect(() => {
+    let intervalId: any = null;
+    if (isLiveStreamActive && scanMode === 'barcode' && videoRef.current) {
+      if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+        try {
+          const detector = new (window as any).BarcodeDetector({
+            formats: ['upc_a', 'upc_e', 'ean_13', 'ean_8', 'code_128', 'qr_code']
+          });
+
+          intervalId = setInterval(async () => {
+            if (videoRef.current && videoRef.current.readyState === 4) {
+              try {
+                const barcodes = await detector.detect(videoRef.current);
+                if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                  const code = barcodes[0].rawValue;
+                  triggerHaptic('success');
+                  stopLiveStream();
+                  handleBarcodeLookup(code);
+                }
+              } catch (e) {}
+            }
+          }, 350);
+        } catch (e) {}
+      }
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isLiveStreamActive, scanMode]);
+
   // WebRTC Live Stream Launcher with 3-tier hardware fallback
   const startLiveStream = async (facing: 'environment' | 'user' = facingMode) => {
     try {
@@ -402,7 +433,7 @@ const CameraScan: React.FC<CameraScanProps> = ({ user, onAddEntry, onClose }) =>
             return;
           }
 
-          const maxDim = 900;
+          const maxDim = 1600;
           let width = img.width;
           let height = img.height;
 

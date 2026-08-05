@@ -996,7 +996,24 @@ export const analyzePackagedProductWithBarcode = async (
 
     const text = response.text;
     if (text) {
-      return JSON.parse(text) as PackagedProductData;
+      const parsed = JSON.parse(text) as PackagedProductData;
+      // If a barcode number was detected in the photo via OCR, attempt Open Food Facts live lookup for 100% verification
+      if (parsed.barcodeDetected && parsed.barcodeDetected.length >= 8) {
+        try {
+          const officialData = await fetchBarcodeNutrition(parsed.barcodeDetected);
+          if (officialData && officialData.foodName && !officialData.foodName.includes("Barcode ")) {
+            return {
+              ...parsed,
+              ...officialData,
+              barcodeDetected: parsed.barcodeDetected,
+              confidenceScore: 99
+            };
+          }
+        } catch (e) {
+          console.warn("Official barcode fetch notice:", e);
+        }
+      }
+      return parsed;
     }
   } catch (err: any) {
     console.warn("Packaged product AI scan notice (falling back to smart estimate):", err?.message || err);
