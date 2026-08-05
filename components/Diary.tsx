@@ -97,7 +97,7 @@ export default function Diary({ entries, onAddManualEntry, onDeleteEntry }: Diar
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search your logs..."
-            className="bg-transparent text-sm font-medium focus:outline-none w-full text-white placeholder:text-slate-600"
+            className="bg-transparent text-sm font-medium focus:outline-none w-full text-white placeholder:text-slate-400"
           />
         </div>
       </header>
@@ -242,48 +242,51 @@ export default function Diary({ entries, onAddManualEntry, onDeleteEntry }: Diar
         {weeklyHistory.map((day) => (
           <div key={day.date} className="space-y-4">
             {/* Day Summary Header */}
-            <div className="flex items-end justify-between px-1 sticky top-0 z-10 py-2 bg-background-dark/80 backdrop-blur-md border-b border-white/5">
+            <div className="flex items-end justify-between px-1 sticky top-0 z-10 py-2.5 bg-background-dark/90 backdrop-blur-xl border-b border-white/10">
               <div>
                 <h2 className="text-lg font-black tracking-tight text-white">{day.label}</h2>
               </div>
               <div className="flex space-x-4">
                 <div className="text-right">
-                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Total</p>
-                  <p className={`text-sm font-black ${day.totals.cal > 0 ? 'text-primary' : 'text-slate-700'}`}>{Math.round(day.totals.cal || 0)} <span className="text-[8px] font-bold text-slate-600">kcal</span></p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total</p>
+                  <p className={`text-sm font-black ${day.totals.cal > 0 ? 'text-primary' : 'text-slate-400'}`}>{Math.round(day.totals.cal || 0)} <span className="text-[8px] font-bold text-slate-400">kcal</span></p>
                 </div>
-                <div className="text-right border-l border-white/5 pl-4">
-                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Protein</p>
-                  <p className="text-sm font-black text-white/40">{Math.round(day.totals.p || 0)}g</p>
+                <div className="text-right border-l border-white/10 pl-4">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Protein</p>
+                  <p className="text-sm font-black text-slate-300">{Math.round(day.totals.p || 0)}g</p>
                 </div>
               </div>
             </div>
 
             {/* Entries for this Day */}
             {day.entries.length === 0 ? (
-              <div className="py-6 flex items-center justify-center glass-card rounded-2xl border-dashed border-white/5 border-2">
-                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">No entries logged</p>
+              <div className="py-6 flex items-center justify-center glass-card rounded-2xl border-dashed border-white/10 border-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No entries logged</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {day.entries.map((entry) => (
-                  <div key={entry.id} className="glass-card rounded-[1.8rem] p-5 flex items-center justify-between group active:scale-[0.98] transition-all border border-white/5 hover:bg-white/[0.05] hover:border-primary/20 relative overflow-hidden">
+                  <div key={entry.id} className="glass-card rounded-[1.8rem] p-5 flex items-center justify-between group active:scale-[0.98] transition-all border border-white/10 hover:bg-white/[0.05] hover:border-primary/30 relative overflow-hidden shadow-sm">
                     <div className="space-y-2 shrink overflow-hidden text-left">
                       <div className="flex items-center space-x-3">
-                        <div className="px-2 py-0.5 rounded-lg bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">
+                        <div className="px-2.5 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[9px] font-black uppercase tracking-widest">
                           {new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                         <h3 className="text-sm font-black text-white truncate group-hover:text-primary transition-colors">{entry.name}</h3>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">P {Math.round(entry.protein || 0)}g</span>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">C {Math.round(entry.carbs || 0)}g</span>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">F {Math.round(entry.fats || 0)}g</span>
+                      <div className="flex items-center space-x-3">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">P {Math.round(entry.protein || 0)}g</span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">C {Math.round(entry.carbs || 0)}g</span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">F {Math.round(entry.fats || 0)}g</span>
+                        {entry.portionSize && (
+                          <span className="text-[9px] font-bold text-primary/80 truncate max-w-[120px]">• {entry.portionSize}</span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center">
                       <div className="text-right shrink-0 ml-4">
                         <p className="text-xl font-black text-primary leading-none tracking-tighter">{Math.round(entry.calories || 0)}</p>
-                        <p className="text-[8px] uppercase font-black text-slate-600 tracking-widest mt-1">kcal</p>
+                        <p className="text-[8px] uppercase font-black text-slate-400 tracking-widest mt-1">kcal</p>
                       </div>
                       <button 
                         onClick={() => setEntryToDelete(entry.id)}
